@@ -1,0 +1,9 @@
+/vendor/
+/node_modules/
+backend/vendor/
+frontend/node_modules/
+.env
+backend/.env
+frontend/.env
+db_data/
+backend/storage/
