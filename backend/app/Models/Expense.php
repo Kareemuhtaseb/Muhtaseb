@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -9,6 +10,26 @@ class Expense extends Model
     use HasFactory;
 
     protected $fillable = [
-        'category','date','amount','notes'
+        'property_id',
+        'date',
+        'payee',
+        'memo',
+        'category_id',
+        'amount'
     ];
+
+    protected $casts = [
+        'date' => 'date',
+        'amount' => 'decimal:2'
+    ];
+
+    public function property()
+    {
+        return $this->belongsTo(Property::class);
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
 }

@@ -8,7 +8,9 @@ class UnitController extends Controller
 {
     public function index()
     {
-        return Unit::with('tenants')->get();
+        return Unit::with(['tenants' => function($query) {
+            $query->select('id', 'name', 'unit_id');
+        }])->select('id', 'unit_number', 'size', 'monthly_rent', 'status')->get();
     }
 
     public function store(Request $request)

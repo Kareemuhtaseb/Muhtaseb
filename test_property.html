@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Property API</title>
+</head>
+<body>
+    <h1>Test Property API</h1>
+    <button onclick="testAddProperty()">Add Test Property</button>
+    <button onclick="testGetProperties()">Get Properties</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAddProperty() {
+            try {
+                const response = await fetch('http://localhost:8000/api/properties.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: 'Sunset Apartments',
+                        location: '123 Main St, Downtown',
+                        notes: 'Luxury apartment complex'
+                    })
+                });
+                
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<pre>Error: ' + error.message + '</pre>';
+            }
+        }
+
+        async function testGetProperties() {
+            try {
+                const response = await fetch('http://localhost:8000/api/properties.php');
+                const result = await response.json();
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = '<pre>Error: ' + error.message + '</pre>';
+            }
+        }
+    </script>
+</body>
+</html>

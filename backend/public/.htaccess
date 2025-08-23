@@ -18,8 +18,12 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # Route all API requests to the fast endpoint
+    RewriteCond %{REQUEST_URI} ^/api/
+    RewriteRule ^api/(.*)$ /fast_endpoints.php [L,QSA]
+
+    # Handle other requests normally
     RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /index.php [L,QSA]
 </IfModule>

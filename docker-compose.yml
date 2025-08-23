@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   backend:
     build: ./backend
@@ -6,31 +5,84 @@ services:
       - ./backend:/var/www/html
     ports:
       - "8000:8000"
+    environment:
+      - DB_CONNECTION=mysql
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_DATABASE=muhtaseb_test
+      - DB_USERNAME=root
+      - DB_PASSWORD=root
+      - APP_KEY=base64:testkey123456789012345678901234567890
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CACHE_STORE=redis
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
     depends_on:
       - db
+      - redis
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
   frontend:
     build: ./frontend
     volumes:
       - ./frontend:/app
+      - /app/node_modules
     ports:
       - "5173:5173"
     depends_on:
       - backend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
   db:
-    image: postgres:15
+    image: mysql:8.0
     environment:
-      POSTGRES_DB: rental
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      MYSQL_DATABASE: muhtaseb_test
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_INNODB_BUFFER_POOL_SIZE: 256M
+      MYSQL_INNODB_LOG_FILE_SIZE: 64M
+      MYSQL_INNODB_FLUSH_LOG_AT_TRX_COMMIT: 2
+      MYSQL_INNODB_FLUSH_METHOD: O_DIRECT
     volumes:
-      - db_data:/var/lib/postgresql/data
+      - db_data:/var/lib/mysql
+      - ./backend/muhtaseb_test_data.sql:/docker-entrypoint-initdb.d/muhtaseb_test_data.sql
     ports:
-      - "5432:5432"
+      - "3306:3306"
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+        reservations:
+          memory: 512M
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
   adminer:
     image: adminer
     ports:
       - "8080:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=db
     depends_on:
       - db
 volumes:
   db_data:
+  redis_data:

@@ -17,7 +17,9 @@ class TenantController extends Controller
      */
     public function index()
     {
-        return Tenant::with('unit')->get();
+        return Tenant::with(['unit' => function($query) {
+            $query->select('id', 'unit_number');
+        }])->select('id', 'name', 'phone', 'email', 'unit_id', 'start_date', 'end_date')->get();
     }
 
     public function store(Request $request)
