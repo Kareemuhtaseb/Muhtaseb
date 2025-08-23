@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "name": "Sunset Apartments",
+        "address": "123 Main St",
+        "property_type": "residential",
+        "total_units": 20
+    },
+    {
+        "id": 2,
+        "name": "Downtown Office",
+        "address": "456 Business Ave",
+        "property_type": "commercial",
+        "total_units": 15
+    },
+    {
+        "id": 3,
+        "name": "Mall Plaza",
+        "address": "789 Shopping Blvd",
+        "property_type": "retail",
+        "total_units": 25
+    }
+]

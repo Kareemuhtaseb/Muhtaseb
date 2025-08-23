@@ -48,11 +48,11 @@ async function load(){
   try {
     loading.value = true
     const [ownersResponse, distributionsResponse] = await Promise.all([
-      axios.get('/owners.php'),
-      axios.get('/distributions.php')
+      axios.get('/owners'),
+      axios.get('/distributions')
     ])
-    owners.value = ownersResponse.data
-    distributions.value = distributionsResponse.data
+    owners.value = ownersResponse.data?.data?.data || ownersResponse.data?.data || ownersResponse.data || []
+    distributions.value = distributionsResponse.data?.data?.data || distributionsResponse.data?.data || distributionsResponse.data || []
   } catch (error) {
     console.error('Error loading data:', error)
   } finally {
@@ -88,9 +88,9 @@ async function submitOwner() {
   try {
     saving.value = true
     if (showEditOwnerModal.value) {
-      await axios.put(`/owners.php?id=${selectedOwner.value.id}`, ownerForm.value)
+      await axios.put(`/owners/${selectedOwner.value.id}`, ownerForm.value)
     } else {
-      await axios.post('/owners.php', ownerForm.value)
+      await axios.post('/owners', ownerForm.value)
     }
     await load()
     closeOwnerModal()
@@ -106,9 +106,9 @@ async function submitDistribution() {
   try {
     saving.value = true
     if (showEditDistributionModal.value) {
-      await axios.put(`/distributions.php?id=${selectedDistribution.value.id}`, distForm.value)
+      await axios.put(`/distributions/${selectedDistribution.value.id}`, distForm.value)
     } else {
-      await axios.post('/distributions.php', distForm.value)
+      await axios.post('/distributions', distForm.value)
     }
     await load()
     closeDistributionModal()
@@ -150,7 +150,7 @@ async function removeOwner(id){
   }
   
   try {
-    await axios.delete(`/owners.php?id=${id}`)
+    await axios.delete(`/owners/${id}`)
     await load()
   } catch (error) {
     console.error('Error removing owner:', error)
@@ -164,7 +164,7 @@ async function removeDistribution(id){
   }
   
   try {
-    await axios.delete(`/distributions.php?id=${id}`)
+    await axios.delete(`/distributions/${id}`)
     await load()
   } catch (error) {
     console.error('Error removing distribution:', error)
@@ -174,7 +174,7 @@ async function removeDistribution(id){
 
 async function calculate(){
   try {
-    calc.value = (await axios.get('/distributions_calculate.php')).data
+    calc.value = (await axios.post('/distributions/calculate')).data
   } catch (error) {
     console.error('Error calculating distributions:', error)
   }

@@ -12,19 +12,23 @@ class Unit extends Model
     protected $fillable = [
         'property_id',
         'unit_number',
-        'unit_type_id',
-        'shop_name',
-        'shop_number',
-        'company_name',
-        'monthly_rent_expected',
-        'status',
-        'notes',
-        'created_by',
-        'updated_by'
+        'unit_type', // apartment, office, shop, warehouse, etc.
+        'status', // available, occupied, maintenance, reserved
+        'area',
+        'bedrooms',
+        'bathrooms',
+        'monthly_rent',
+        'description',
+        'amenities',
+        'notes'
     ];
 
     protected $casts = [
-        'monthly_rent_expected' => 'decimal:2',
+        'area' => 'decimal:2',
+        'bedrooms' => 'integer',
+        'bathrooms' => 'integer',
+        'monthly_rent' => 'decimal:2',
+        'amenities' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -35,14 +39,9 @@ class Unit extends Model
         return $this->belongsTo(Property::class);
     }
 
-    public function tenants()
+    public function contracts()
     {
-        return $this->hasMany(Tenant::class);
-    }
-
-    public function leases()
-    {
-        return $this->hasMany(Lease::class);
+        return $this->hasMany(Contract::class);
     }
 
     public function income()
@@ -55,84 +54,58 @@ class Unit extends Model
         return $this->hasMany(Expense::class);
     }
 
-    public function payments()
-    {
-        return $this->hasMany(Payment::class);
-    }
-
     public function maintenanceRequests()
     {
         return $this->hasMany(MaintenanceRequest::class);
     }
 
-    public function propertyDocuments()
+    // Accessors
+    public function getIsOccupiedAttribute()
     {
-        return $this->hasMany(PropertyDocument::class);
+        return $this->status === 'occupied';
     }
 
-    // Belongs to relationships
-    public function unitType()
+    public function getIsAvailableAttribute()
     {
-        return $this->belongsTo(UnitType::class);
+        return $this->status === 'available';
     }
 
-    public function createdBy()
+    public function getIsUnderMaintenanceAttribute()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        return $this->status === 'maintenance';
     }
 
-    public function updatedBy()
+    public function getActiveContractAttribute()
     {
-        return $this->belongsTo(User::class, 'updated_by');
+        return $this->contracts()->active()->first();
     }
 
-    // Accessor methods
-    public function getCurrentLeaseAttribute()
+    public function getExpectedIncomeAttribute()
     {
-        return $this->leases()->where('status', 'active')->first();
+        return $this->contracts()->active()->get()->sum('expected_income');
     }
 
-    public function getCurrentTenantAttribute()
-    {
-        return $this->tenants()->whereHas('leases', function($query) {
-            $query->where('status', 'active');
-        })->first();
-    }
-
-    public function getDisplayNameAttribute()
-    {
-        if ($this->shop_name) {
-            return $this->shop_name;
-        }
-        if ($this->company_name) {
-            return $this->company_name;
-        }
-        return "Unit {$this->unit_number}";
-    }
-
-    public function getTotalIncomeAttribute()
+    public function getActualIncomeAttribute()
     {
         return $this->income()->sum('amount');
     }
 
-    public function getTotalExpensesAttribute()
+    public function getVarianceAttribute()
     {
-        return $this->expenses()->sum('amount');
+        return $this->expected_income - $this->actual_income;
     }
 
-    public function getNetIncomeAttribute()
+    public function getVariancePercentageAttribute()
     {
-        return $this->total_income - $this->total_expenses;
+        if ($this->expected_income == 0) {
+            return 0;
+        }
+        return ($this->variance / $this->expected_income) * 100;
     }
 
-    public function getTotalPaymentsAttribute()
+    public function getOccupancyRateAttribute()
     {
-        return $this->payments()->sum('amount');
-    }
-
-    public function getOpenMaintenanceRequestsAttribute()
-    {
-        return $this->maintenanceRequests()->whereIn('status', ['open', 'in_progress'])->count();
+        return $this->is_occupied ? 100 : 0;
     }
 
     // Scopes
@@ -146,32 +119,56 @@ class Unit extends Model
         return $query->where('status', 'occupied');
     }
 
-    public function scopeMaintenance($query)
+    public function scopeUnderMaintenance($query)
     {
         return $query->where('status', 'maintenance');
     }
 
-    public function scopeWithLeases($query)
+    public function scopeByType($query, $type)
     {
-        return $query->with(['leases' => function ($q) {
-            $q->orderBy('start_date', 'desc');
-        }]);
+        return $query->where('unit_type', $type);
     }
 
-    public function scopeWithTenants($query)
+    public function scopeByProperty($query, $propertyId)
     {
-        return $query->with(['tenants', 'currentTenant']);
+        return $query->where('property_id', $propertyId);
     }
 
-    public function scopeWithFinancials($query)
+    public function scopeWithDetails($query)
     {
-        return $query->with(['income', 'expenses', 'payments']);
+        return $query->with(['property', 'contracts', 'income', 'expenses']);
     }
 
-    public function scopeWithMaintenance($query)
+    // Methods
+    public function getFinancialReport($startDate = null, $endDate = null)
     {
-        return $query->with(['maintenanceRequests' => function ($q) {
-            $q->orderBy('request_date', 'desc');
-        }]);
+        $startDate = $startDate ? \Carbon\Carbon::parse($startDate) : now()->startOfYear();
+        $endDate = $endDate ? \Carbon\Carbon::parse($endDate) : now()->endOfYear();
+
+        $income = $this->income()->whereBetween('date', [$startDate, $endDate])->sum('amount');
+        $expenses = $this->expenses()->whereBetween('date', [$startDate, $endDate])->sum('amount');
+        $expectedIncome = $this->contracts()->active()->get()->sum(function($contract) use ($startDate, $endDate) {
+            return $contract->calculateExpectedIncomeForPeriod($startDate, $endDate);
+        });
+
+        return [
+            'unit_id' => $this->id,
+            'unit_number' => $this->unit_number,
+            'property_name' => $this->property->name ?? 'N/A',
+            'period' => [
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d')
+            ],
+            'income' => [
+                'expected' => $expectedIncome,
+                'actual' => $income,
+                'variance' => $expectedIncome - $income,
+                'variance_percentage' => $expectedIncome > 0 ? (($expectedIncome - $income) / $expectedIncome) * 100 : 0
+            ],
+            'expenses' => $expenses,
+            'net_income' => $income - $expenses,
+            'status' => $this->status,
+            'monthly_rent' => $this->monthly_rent
+        ];
     }
 }

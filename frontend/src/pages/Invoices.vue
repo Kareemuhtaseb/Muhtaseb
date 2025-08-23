@@ -366,11 +366,11 @@ async function loadData() {
   try {
     loading.value = true
     const [invoicesResponse, ownersResponse] = await Promise.all([
-      axios.get('/invoices.php'),
-      axios.get('/owners.php')
+      axios.get('/invoices'),
+      axios.get('/owners')
     ])
-    invoices.value = invoicesResponse.data
-    owners.value = ownersResponse.data
+    invoices.value = invoicesResponse.data?.data?.data || invoicesResponse.data?.data || invoicesResponse.data || []
+    owners.value = ownersResponse.data?.data?.data || ownersResponse.data?.data || ownersResponse.data || []
   } catch (error) {
     console.error('Error loading data:', error)
   } finally {
@@ -398,7 +398,7 @@ function editInvoice(invoice) {
 async function addInvoice() {
   try {
     submitting.value = true
-    await axios.post('/invoices.php', form.value)
+    await axios.post('/invoices', form.value)
     closeModal()
     await loadData()
   } catch (error) {
@@ -412,7 +412,7 @@ async function addInvoice() {
 async function updateInvoice() {
   try {
     submitting.value = true
-    await axios.put(`/invoices.php?id=${editingInvoice.value.id}`, form.value)
+    await axios.put(`/invoices/${editingInvoice.value.id}`, form.value)
     closeModal()
     await loadData()
   } catch (error) {
@@ -429,7 +429,7 @@ async function deleteInvoice(id) {
   }
   
   try {
-    await axios.delete(`/invoices.php?id=${id}`)
+    await axios.delete(`/invoices/${id}`)
     await loadData()
   } catch (error) {
     console.error('Error deleting invoice:', error)

@@ -285,8 +285,8 @@ const filteredCategories = computed(() => {
 async function loadData() {
   try {
     loading.value = true
-    const response = await axios.get('/categories.php')
-    categories.value = response.data
+    const response = await axios.get('/categories')
+    categories.value = response.data?.data?.data || response.data?.data || response.data || []
   } catch (error) {
     console.error('Error loading data:', error)
   } finally {
@@ -308,7 +308,7 @@ function editCategory(category) {
 async function addCategory() {
   try {
     submitting.value = true
-    await axios.post('/categories.php', form.value)
+    await axios.post('/categories', form.value)
     closeModal()
     await loadData()
   } catch (error) {
@@ -322,7 +322,7 @@ async function addCategory() {
 async function updateCategory() {
   try {
     submitting.value = true
-    await axios.put(`/categories.php?id=${editingCategory.value.id}`, form.value)
+    await axios.put(`/categories/${editingCategory.value.id}`, form.value)
     closeModal()
     await loadData()
   } catch (error) {
@@ -339,7 +339,7 @@ async function deleteCategory(id) {
   }
   
   try {
-    await axios.delete(`/categories.php?id=${id}`)
+    await axios.delete(`/categories/${id}`)
     await loadData()
   } catch (error) {
     console.error('Error deleting category:', error)

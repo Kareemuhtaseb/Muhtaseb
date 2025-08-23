@@ -1,68 +1,24 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Dashboard from '../pages/Dashboard.vue'
-import CommercialComplexes from '../pages/CommercialComplexes.vue'
-import Shops from '../pages/Shops.vue'
-import Companies from '../pages/Companies.vue'
-import Contracts from '../pages/Contracts.vue'
-import Properties from '../pages/Properties.vue'
-import Units from '../pages/Units.vue'
-import Tenants from '../pages/Tenants.vue'
-import Leases from '../pages/Leases.vue'
 import Income from '../pages/Income.vue'
 import Expenses from '../pages/Expenses.vue'
-import Owners from '../pages/Owners.vue'
 import Payments from '../pages/Payments.vue'
 import Invoices from '../pages/Invoices.vue'
-import MonthlyStatements from '../pages/MonthlyStatements.vue'
-import Categories from '../pages/Categories.vue'
-import Users from '../pages/Users.vue'
 import Reports from '../pages/Reports.vue'
+import Distributions from '../pages/Distributions.vue'
+import Maintenance from '../pages/Maintenance.vue'
+import Notifications from '../pages/Notifications.vue'
+import Categories from '../pages/Categories.vue'
+import Owners from '../pages/Owners.vue'
+import Properties from '../pages/Properties.vue'
+import Units from '../pages/Units.vue'
+import Contracts from '../pages/Contracts.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Dashboard',
     component: Dashboard
-  },
-  {
-    path: '/commercial-complexes',
-    name: 'CommercialComplexes',
-    component: CommercialComplexes
-  },
-  {
-    path: '/shops',
-    name: 'Shops',
-    component: Shops
-  },
-  {
-    path: '/companies',
-    name: 'Companies',
-    component: Companies
-  },
-  {
-    path: '/contracts',
-    name: 'Contracts',
-    component: Contracts
-  },
-  {
-    path: '/properties',
-    name: 'Properties',
-    component: Properties
-  },
-  {
-    path: '/units',
-    name: 'Units',
-    component: Units
-  },
-  {
-    path: '/tenants',
-    name: 'Tenants',
-    component: Tenants
-  },
-  {
-    path: '/leases',
-    name: 'Leases',
-    component: Leases
   },
   {
     path: '/income',
@@ -75,11 +31,6 @@ const routes = [
     component: Expenses
   },
   {
-    path: '/owners',
-    name: 'Owners',
-    component: Owners
-  },
-  {
     path: '/payments',
     name: 'Payments',
     component: Payments
@@ -90,9 +41,24 @@ const routes = [
     component: Invoices
   },
   {
-    path: '/monthly-statements',
-    name: 'MonthlyStatements',
-    component: MonthlyStatements
+    path: '/reports',
+    name: 'Reports',
+    component: Reports
+  },
+  {
+    path: '/distributions',
+    name: 'Distributions',
+    component: Distributions
+  },
+  {
+    path: '/maintenance',
+    name: 'Maintenance',
+    component: Maintenance
+  },
+  {
+    path: '/notifications',
+    name: 'Notifications',
+    component: Notifications
   },
   {
     path: '/categories',
@@ -100,14 +66,24 @@ const routes = [
     component: Categories
   },
   {
-    path: '/users',
-    name: 'Users',
-    component: Users
+    path: '/owners',
+    name: 'Owners',
+    component: Owners
   },
   {
-    path: '/reports',
-    name: 'Reports',
-    component: Reports
+    path: '/properties',
+    name: 'Properties',
+    component: Properties
+  },
+  {
+    path: '/units',
+    name: 'Units',
+    component: Units
+  },
+  {
+    path: '/contracts',
+    name: 'Contracts',
+    component: Contracts
   }
 ]
 

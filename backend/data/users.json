@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "name": "Admin User",
+        "email": "admin@muhtaseb.com",
+        "role": "admin"
+    },
+    {
+        "id": 2,
+        "name": "Manager User",
+        "email": "manager@muhtaseb.com",
+        "role": "manager"
+    },
+    {
+        "id": 3,
+        "name": "Viewer User",
+        "email": "viewer@muhtaseb.com",
+        "role": "viewer"
+    }
+]

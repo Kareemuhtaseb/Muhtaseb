@@ -9,13 +9,18 @@ class Expense extends Model
 {
     use HasFactory;
 
+    protected $table = 'expenses';
+
     protected $fillable = [
-        'property_id',
         'date',
         'payee',
         'memo',
         'category_id',
-        'amount'
+        'amount',
+        'receipt_number',
+        'payment_method',
+        'property_id',
+        'unit_id'
     ];
 
     protected $casts = [
@@ -23,13 +28,18 @@ class Expense extends Model
         'amount' => 'decimal:2'
     ];
 
+    public function category()
+    {
+        return $this->belongsTo(Category::class);
+    }
+
     public function property()
     {
         return $this->belongsTo(Property::class);
     }
 
-    public function category()
+    public function unit()
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Unit::class);
     }
 }

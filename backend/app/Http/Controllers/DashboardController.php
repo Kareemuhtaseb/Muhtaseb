@@ -2,43 +2,23 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ProcessPropertyReport;
-use App\Models\Property;
-use App\Models\Unit;
-use App\Models\Tenant;
-use App\Models\Income;
-use App\Models\Expense;
-use App\Models\MaintenanceRequest;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use App\Models\Income;
+use App\Models\Expense;
+use App\Models\Owner;
+use App\Models\Property;
+use App\Models\Unit;
+use App\Models\Contract;
+use App\Models\MaintenanceRequest;
 
 class DashboardController extends Controller
 {
-    /**
-     * Get dashboard overview with cached data
-     */
-    public function overview(): JsonResponse
+    public function index(): JsonResponse
     {
         return Cache::remember('dashboard_overview', 300, function () {
             $stats = [
-                'properties' => [
-                    'total' => Property::count(),
-                    'active' => Property::active()->count(),
-                ],
-                'units' => [
-                    'total' => Unit::count(),
-                    'occupied' => Unit::where('status', 'occupied')->count(),
-                    'available' => Unit::where('status', 'available')->count(),
-                    'maintenance' => Unit::where('status', 'maintenance')->count(),
-                ],
-                'tenants' => [
-                    'total' => Tenant::count(),
-                    'active' => Tenant::whereHas('leases', function ($q) {
-                        $q->where('status', 'active');
-                    })->count(),
-                ],
                 'financials' => [
                     'monthly_income' => Income::whereMonth('date', now()->month)
                         ->whereYear('date', now()->year)
@@ -49,52 +29,137 @@ class DashboardController extends Controller
                     'total_income' => Income::sum('amount'),
                     'total_expenses' => Expense::sum('amount'),
                 ],
+                'properties' => [
+                    'total' => Property::count(),
+                    'active' => Property::active()->count(),
+                    'residential' => Property::where('property_type', 'residential')->count(),
+                    'commercial' => Property::where('property_type', 'commercial')->count(),
+                ],
+                'units' => [
+                    'total' => Unit::count(),
+                    'occupied' => Unit::where('status', 'occupied')->count(),
+                    'available' => Unit::where('status', 'available')->count(),
+                    'maintenance' => Unit::where('status', 'maintenance')->count(),
+                ],
+                'contracts' => [
+                    'total' => Contract::count(),
+                    'active' => Contract::active()->count(),
+                    'expired' => Contract::expired()->count(),
+                    'expiring_soon' => Contract::expiringSoon(30)->count(),
+                ],
+                'owners' => [
+                    'total' => Owner::count(),
+                    'active' => Owner::where('status', 'active')->count(),
+                ],
                 'maintenance' => [
                     'open_requests' => MaintenanceRequest::whereIn('status', ['open', 'in_progress'])->count(),
-                    'overdue_requests' => MaintenanceRequest::overdue()->count(),
+                    'overdue_requests' => MaintenanceRequest::where('status', 'overdue')->count(),
                 ],
             ];
 
-            // Calculate net income
-            $stats['financials']['net_income'] = $stats['financials']['monthly_income'] - $stats['financials']['monthly_expenses'];
-            $stats['financials']['total_net_income'] = $stats['financials']['total_income'] - $stats['financials']['total_expenses'];
+            $overview = [
+                'total_income' => $stats['financials']['total_income'],
+                'total_expenses' => $stats['financials']['total_expenses'],
+                'net_income' => $stats['financials']['total_income'] - $stats['financials']['total_expenses'],
+                'monthly_income' => $stats['financials']['monthly_income'],
+                'monthly_expenses' => $stats['financials']['monthly_expenses'],
+                'properties' => $stats['properties']['total'],
+                'units' => $stats['units']['total'],
+                'occupied_units' => $stats['units']['occupied'],
+                'occupancy_rate' => $stats['units']['total'] > 0 ? ($stats['units']['occupied'] / $stats['units']['total']) * 100 : 0,
+                'active_contracts' => $stats['contracts']['active'],
+                'expiring_contracts' => $stats['contracts']['expiring_soon']
+            ];
 
-            return $this->successResponse($stats, 'Dashboard overview retrieved successfully');
+            $recentActivities = [
+                'recent_income' => Income::with(['category', 'property', 'unit'])
+                    ->orderBy('date', 'desc')
+                    ->limit(5)
+                    ->get(),
+                'recent_expenses' => Expense::with(['category', 'property', 'unit'])
+                    ->orderBy('date', 'desc')
+                    ->limit(5)
+                    ->get(),
+                'recent_maintenance' => MaintenanceRequest::with(['assignedTo'])
+                    ->orderBy('request_date', 'desc')
+                    ->limit(5)
+                    ->get(),
+                'expiring_contracts' => Contract::expiringSoon(30)
+                    ->with(['property', 'unit', 'category'])
+                    ->orderBy('end_date', 'asc')
+                    ->limit(5)
+                    ->get(),
+            ];
+
+            $owner_distributions = Owner::with(['distributions'])
+                ->get()
+                ->map(function ($owner) {
+                    return [
+                        'id' => $owner->id,
+                        'name' => $owner->name,
+                        'share_percentage' => $owner->share_percentage,
+                        'total_distributions' => $owner->distributions->sum('amount'),
+                        'status' => $owner->status,
+                    ];
+                })
+                ->sortByDesc('total_distributions')
+                ->take(5)
+                ->values();
+
+            $property_performance = Property::with(['units', 'contracts', 'income', 'expenses'])
+                ->get()
+                ->map(function ($property) {
+                    return [
+                        'id' => $property->id,
+                        'name' => $property->name,
+                        'property_type' => $property->property_type,
+                        'occupancy_rate' => $property->occupancy_rate,
+                        'total_income' => $property->total_income,
+                        'total_expenses' => $property->total_expenses,
+                        'net_income' => $property->net_income,
+                        'roi' => $property->roi,
+                        'variance' => $property->variance,
+                        'variance_percentage' => $property->variance_percentage,
+                    ];
+                })
+                ->sortByDesc('net_income')
+                ->take(5)
+                ->values();
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'overview' => $overview,
+                    'stats' => $stats,
+                    'recent_activities' => $recentActivities,
+                    'owner_distributions' => $owner_distributions,
+                    'property_performance' => $property_performance,
+                ]
+            ]);
         });
     }
 
     /**
-     * Get recent activities
+     * Get owner performance metrics
      */
-    public function recentActivities(): JsonResponse
+    public function ownerPerformance(): JsonResponse
     {
-        return Cache::remember('dashboard_recent_activities', 180, function () {
-            $activities = [
-                'recent_income' => Income::with(['property', 'category'])
-                    ->orderBy('date', 'desc')
-                    ->limit(5)
-                    ->get(),
-                'recent_expenses' => Expense::with(['property', 'category'])
-                    ->orderBy('date', 'desc')
-                    ->limit(5)
-                    ->get(),
-                'recent_maintenance' => MaintenanceRequest::with(['property', 'unit', 'assignedTo'])
-                    ->orderBy('request_date', 'desc')
-                    ->limit(5)
-                    ->get(),
-                'expiring_leases' => DB::table('leases')
-                    ->join('units', 'leases.unit_id', '=', 'units.id')
-                    ->join('properties', 'units.property_id', '=', 'properties.id')
-                    ->join('tenants', 'leases.tenant_id', '=', 'tenants.id')
-                    ->where('leases.status', 'active')
-                    ->where('leases.end_date', '<=', now()->addDays(30))
-                    ->select('leases.*', 'units.unit_number', 'properties.name as property_name', 'tenants.name as tenant_name')
-                    ->orderBy('leases.end_date', 'asc')
-                    ->limit(5)
-                    ->get(),
-            ];
+        return Cache::remember('dashboard_owner_performance', 600, function () {
+            $performance = Owner::with(['distributions'])
+                ->get()
+                ->map(function ($owner) {
+                    return [
+                        'id' => $owner->id,
+                        'name' => $owner->name,
+                        'share_percentage' => $owner->share_percentage,
+                        'total_distributions' => $owner->distributions->sum('amount'),
+                        'status' => $owner->status,
+                    ];
+                })
+                ->sortByDesc('total_distributions')
+                ->values();
 
-            return $this->successResponse($activities, 'Recent activities retrieved successfully');
+            return $this->successResponse($performance, 'Owner performance retrieved successfully');
         });
     }
 
@@ -110,12 +175,14 @@ class DashboardController extends Controller
                     return [
                         'id' => $property->id,
                         'name' => $property->name,
+                        'property_type' => $property->property_type,
                         'occupancy_rate' => $property->occupancy_rate,
                         'total_income' => $property->total_income,
                         'total_expenses' => $property->total_expenses,
                         'net_income' => $property->net_income,
-                        'total_units' => $property->total_units,
-                        'occupied_units' => $property->occupied_units,
+                        'roi' => $property->roi,
+                        'total_units' => $property->units()->count(),
+                        'occupied_units' => $property->units()->where('status', 'occupied')->count(),
                     ];
                 })
                 ->sortByDesc('net_income')
@@ -126,133 +193,25 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get financial summary
+     * Success response helper
      */
-    public function financialSummary(Request $request): JsonResponse
+    private function successResponse($data, $message = 'Success', $code = 200): JsonResponse
     {
-        $period = $request->get('period', 'month'); // month, quarter, year
-        $cacheKey = "dashboard_financial_summary_{$period}";
-
-        return Cache::remember($cacheKey, 300, function () use ($period) {
-            $dateRange = $this->getDateRange($period);
-
-            $summary = [
-                'period' => $period,
-                'date_range' => $dateRange,
-                'income' => [
-                    'total' => Income::whereBetween('date', $dateRange)->sum('amount'),
-                    'by_category' => Income::whereBetween('date', $dateRange)
-                        ->with('category')
-                        ->get()
-                        ->groupBy('category.name')
-                        ->map(function ($items) {
-                            return $items->sum('amount');
-                        }),
-                ],
-                'expenses' => [
-                    'total' => Expense::whereBetween('date', $dateRange)->sum('amount'),
-                    'by_category' => Expense::whereBetween('date', $dateRange)
-                        ->with('category')
-                        ->get()
-                        ->groupBy('category.name')
-                        ->map(function ($items) {
-                            return $items->sum('amount');
-                        }),
-                ],
-                'monthly_trend' => $this->getMonthlyTrend($dateRange),
-            ];
-
-            $summary['net_income'] = $summary['income']['total'] - $summary['expenses']['total'];
-
-            return $this->successResponse($summary, 'Financial summary retrieved successfully');
-        });
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data
+        ], $code);
     }
 
     /**
-     * Generate property report (async)
+     * Error response helper
      */
-    public function generatePropertyReport(Request $request): JsonResponse
+    private function errorResponse($message = 'Error', $code = 400): JsonResponse
     {
-        $request->validate([
-            'property_id' => 'required|exists:properties,id',
-            'report_type' => 'required|in:financial,occupancy,maintenance,comprehensive',
-            'date_range' => 'sometimes|array',
-        ]);
-
-        // Dispatch background job
-        ProcessPropertyReport::dispatch(
-            $request->property_id,
-            $request->report_type,
-            $request->date_range ?? []
-        );
-
-        return $this->successResponse(
-            null,
-            'Report generation started. Check back in a few minutes.',
-            202
-        );
-    }
-
-    /**
-     * Get property report status
-     */
-    public function getPropertyReport(Request $request): JsonResponse
-    {
-        $request->validate([
-            'property_id' => 'required|exists:properties,id',
-            'report_type' => 'required|in:financial,occupancy,maintenance,comprehensive',
-            'date_range' => 'sometimes|array',
-        ]);
-
-        $cacheKey = "property_report_{$request->property_id}_{$request->report_type}_" . md5(serialize($request->date_range ?? []));
-        
-        $report = Cache::get($cacheKey);
-        
-        if (!$report) {
-            return $this->errorResponse('Report not found or still being generated', 404);
-        }
-
-        return $this->successResponse($report, 'Property report retrieved successfully');
-    }
-
-    /**
-     * Get date range based on period
-     */
-    private function getDateRange(string $period): array
-    {
-        switch ($period) {
-            case 'month':
-                return [now()->startOfMonth(), now()->endOfMonth()];
-            case 'quarter':
-                return [now()->startOfQuarter(), now()->endOfQuarter()];
-            case 'year':
-                return [now()->startOfYear(), now()->endOfYear()];
-            default:
-                return [now()->startOfMonth(), now()->endOfMonth()];
-        }
-    }
-
-    /**
-     * Get monthly trend data
-     */
-    private function getMonthlyTrend(array $dateRange): array
-    {
-        $months = [];
-        $current = $dateRange[0]->copy();
-
-        while ($current <= $dateRange[1]) {
-            $monthKey = $current->format('Y-m');
-            $months[$monthKey] = [
-                'income' => Income::whereYear('date', $current->year)
-                    ->whereMonth('date', $current->month)
-                    ->sum('amount'),
-                'expenses' => Expense::whereYear('date', $current->year)
-                    ->whereMonth('date', $current->month)
-                    ->sum('amount'),
-            ];
-            $current->addMonth();
-        }
-
-        return $months;
+        return response()->json([
+            'success' => false,
+            'message' => $message
+        ], $code);
     }
 }

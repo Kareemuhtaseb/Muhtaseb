@@ -1,0 +1,29 @@
+[
+    {
+        "id": 1,
+        "property_id": 1,
+        "unit_id": 1,
+        "tenant_name": "Alice Johnson",
+        "start_date": "2024-01-01",
+        "end_date": "2024-12-31",
+        "monthly_rent": 1200
+    },
+    {
+        "id": 2,
+        "property_id": 2,
+        "unit_id": 3,
+        "tenant_name": "Bob Wilson",
+        "start_date": "2024-01-01",
+        "end_date": "2024-12-31",
+        "monthly_rent": 2500
+    },
+    {
+        "id": 3,
+        "property_id": 3,
+        "unit_id": 4,
+        "tenant_name": "Carol Brown",
+        "start_date": "2024-01-01",
+        "end_date": "2024-12-31",
+        "monthly_rent": 3000
+    }
+]

@@ -16,72 +16,50 @@ if (!file_exists('artisan')) {
 }
 
 // Database configuration
-$dbConfig = [
-    'host' => '127.0.0.1',
-    'port' => '3306',
-    'database' => 'muhtaseb_test',
-    'username' => 'root',
-    'password' => ''
-];
+$host = '127.0.0.1';
+$username = 'root';
+$password = '';
+$database = 'muhtaseb_test';
 
-echo "📊 Database Configuration:\n";
-echo "   Host: {$dbConfig['host']}\n";
-echo "   Port: {$dbConfig['port']}\n";
-echo "   Database: {$dbConfig['database']}\n";
-echo "   Username: {$dbConfig['username']}\n\n";
+echo "🔌 Connecting to MySQL...\n";
 
-// Test MySQL connection
 try {
-    $pdo = new PDO(
-        "mysql:host={$dbConfig['host']};port={$dbConfig['port']}",
-        $dbConfig['username'],
-        $dbConfig['password']
-    );
-    echo "✅ MySQL connection successful\n";
+    $pdo = new PDO("mysql:host=$host", $username, $password);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    echo "✅ Connected to MySQL successfully\n";
 } catch (PDOException $e) {
     echo "❌ Error connecting to MySQL: " . $e->getMessage() . "\n";
-    echo "   Please ensure MySQL is running and credentials are correct\n";
     exit(1);
 }
 
-// Create database if it doesn't exist
+// Drop database if exists
+echo "🗑️ Dropping existing test database...\n";
 try {
-    $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$dbConfig['database']}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
-    echo "✅ Database '{$dbConfig['database']}' created/verified\n";
+    $pdo->exec("DROP DATABASE IF EXISTS `$database`");
+    echo "✅ Dropped existing database\n";
+} catch (PDOException $e) {
+    echo "⚠️ Warning: Could not drop database: " . $e->getMessage() . "\n";
+}
+
+// Create database
+echo "📁 Creating test database...\n";
+try {
+    $pdo->exec("CREATE DATABASE `$database` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+    echo "✅ Created database: $database\n";
 } catch (PDOException $e) {
     echo "❌ Error creating database: " . $e->getMessage() . "\n";
     exit(1);
 }
 
-// Set up environment variables for Laravel
+// Set up environment for MySQL
 putenv('DB_CONNECTION=mysql');
-putenv('DB_HOST=' . $dbConfig['host']);
-putenv('DB_PORT=' . $dbConfig['port']);
-putenv('DB_DATABASE=' . $dbConfig['database']);
-putenv('DB_USERNAME=' . $dbConfig['username']);
-putenv('DB_PASSWORD=' . $dbConfig['password']);
-
-// Generate application key if not exists
-if (!file_exists('.env')) {
-    echo "📝 Creating .env file...\n";
-    $envContent = "APP_NAME=Muhtaseb\n";
-    $envContent .= "APP_ENV=local\n";
-    $envContent .= "APP_KEY=base64:" . base64_encode(random_bytes(32)) . "\n";
-    $envContent .= "APP_DEBUG=true\n";
-    $envContent .= "APP_URL=http://localhost\n\n";
-    $envContent .= "DB_CONNECTION=mysql\n";
-    $envContent .= "DB_HOST={$dbConfig['host']}\n";
-    $envContent .= "DB_PORT={$dbConfig['port']}\n";
-    $envContent .= "DB_DATABASE={$dbConfig['database']}\n";
-    $envContent .= "DB_USERNAME={$dbConfig['username']}\n";
-    $envContent .= "DB_PASSWORD={$dbConfig['password']}\n";
-    
-    file_put_contents('.env', $envContent);
-    echo "✅ .env file created\n";
-}
+putenv('DB_HOST=' . $host);
+putenv('DB_DATABASE=' . $database);
+putenv('DB_USERNAME=' . $username);
+putenv('DB_PASSWORD=' . $password);
 
 echo "🔄 Running database migrations...\n";
-$output = shell_exec('php artisan migrate:fresh --force 2>&1');
+$output = shell_exec('php artisan migrate --force 2>&1');
 echo $output;
 
 if (strpos($output, 'Migration table created successfully') === false && strpos($output, 'Nothing to migrate') === false) {
@@ -98,7 +76,7 @@ if (strpos($output, 'Database seeded successfully') === false) {
     exit(1);
 }
 
-echo "\n✅ Test database setup completed successfully!\n\n";
+echo "\n✅ MySQL Test database setup completed successfully!\n\n";
 
 echo "📊 Test Data Summary:\n";
 echo "   • 3 Users (admin, manager, viewer)\n";
@@ -114,11 +92,7 @@ echo "   Admin: admin@muhtaseb.com / password\n";
 echo "   Manager: manager@muhtaseb.com / password\n";
 echo "   Viewer: viewer@muhtaseb.com / password\n\n";
 
-echo "🗄️ Database Information:\n";
-echo "   Host: {$dbConfig['host']}:{$dbConfig['port']}\n";
-echo "   Database: {$dbConfig['database']}\n";
-echo "   Username: {$dbConfig['username']}\n\n";
-
+echo "📁 Database: $database on $host\n";
 echo "🌐 Start the application with: php artisan serve\n\n";
 
 echo "🎉 Happy testing!\n";

@@ -1,0 +1,26 @@
+[
+    {
+        "id": 1,
+        "property_id": 1,
+        "unit_id": 1,
+        "amount": 1200,
+        "date": "2024-01-15",
+        "description": "Rent payment"
+    },
+    {
+        "id": 2,
+        "property_id": 2,
+        "unit_id": 3,
+        "amount": 2500,
+        "date": "2024-01-15",
+        "description": "Rent payment"
+    },
+    {
+        "id": 3,
+        "property_id": 3,
+        "unit_id": 4,
+        "amount": 3000,
+        "date": "2024-01-15",
+        "description": "Rent payment"
+    }
+]

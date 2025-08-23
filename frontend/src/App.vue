@@ -60,102 +60,79 @@
             </div>
           </div>
 
-          <!-- Commercial Complex Management Section -->
+          <!-- Property Management Section -->
           <div>
             <div class="flex items-center space-x-3 mb-6">
               <div class="w-1 h-8 bg-gradient-to-b from-emerald-500 to-teal-600 rounded-full shadow-lg"></div>
-              <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest">Commercial Complex</h3>
+              <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest">Property Management</h3>
             </div>
             <div class="space-y-3">
-              <router-link 
-                to="/commercial-complexes"
+              <router-link
+                to="/properties"
                 class="group relative flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:text-white transition-all duration-300"
-                :class="{ 
-                  'bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-white shadow-lg border border-emerald-500/30 transform scale-105': $route.path === '/commercial-complexes',
-                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/commercial-complexes'
+                :class="{
+                  'bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-white shadow-lg border border-emerald-500/30 transform scale-105': $route.path === '/properties',
+                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/properties'
                 }"
               >
                 <div class="relative">
-                                     <div class="w-11 h-11 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                     </svg>
-                   </div>
-                  <div v-if="$route.path === '/commercial-complexes'" class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg"></div>
+                  <div class="w-11 h-11 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                  </div>
+                  <div v-if="$route.path === '/properties'" class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg"></div>
                 </div>
                 <div class="flex-1">
-                  <span class="font-semibold text-sm">Complexes</span>
-                  <p class="text-xs text-slate-500 mt-1">Manage Complexes</p>
+                  <span class="font-semibold text-sm">Properties</span>
+                  <p class="text-xs text-slate-500 mt-1">Manage Properties</p>
                 </div>
-                <div v-if="$route.path === '/commercial-complexes'" class="w-2 h-2 bg-emerald-500 rounded-full shadow-lg"></div>
+                <div v-if="$route.path === '/properties'" class="w-2 h-2 bg-emerald-500 rounded-full shadow-lg"></div>
               </router-link>
-              
-              <router-link 
-                to="/shops"
+
+              <router-link
+                to="/units"
                 class="group relative flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:text-white transition-all duration-300"
-                :class="{ 
-                  'bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-white shadow-lg border border-emerald-500/30 transform scale-105': $route.path === '/shops',
-                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/shops'
+                :class="{
+                  'bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-white shadow-lg border border-emerald-500/30 transform scale-105': $route.path === '/units',
+                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/units'
                 }"
               >
                 <div class="relative">
-                                     <div class="w-11 h-11 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 5v14M17 5v14M7 5a2 2 0 012-2h6a2 2 0 012 2M7 19a2 2 0 002 2h6a2 2 0 002-2"></path>
-                     </svg>
-                   </div>
-                  <div v-if="$route.path === '/shops'" class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg"></div>
+                  <div class="w-11 h-11 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5v4m8-4v4M8 11v4m8-4v4"></path>
+                    </svg>
+                  </div>
+                  <div v-if="$route.path === '/units'" class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg"></div>
                 </div>
                 <div class="flex-1">
-                  <span class="font-semibold text-sm">Shops</span>
-                  <p class="text-xs text-slate-500 mt-1">Commercial Shops</p>
+                  <span class="font-semibold text-sm">Units</span>
+                  <p class="text-xs text-slate-500 mt-1">Manage Units</p>
                 </div>
-                <div v-if="$route.path === '/shops'" class="w-2 h-2 bg-emerald-500 rounded-full shadow-lg"></div>
+                <div v-if="$route.path === '/units'" class="w-2 h-2 bg-emerald-500 rounded-full shadow-lg"></div>
               </router-link>
-              
-              <router-link 
-                to="/companies"
-                class="group relative flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:text-white transition-all duration-300"
-                :class="{ 
-                  'bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-white shadow-lg border border-emerald-500/30 transform scale-105': $route.path === '/companies',
-                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/companies'
-                }"
-              >
-                <div class="relative">
-                                     <div class="w-11 h-11 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                     </svg>
-                   </div>
-                  <div v-if="$route.path === '/companies'" class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg"></div>
-                </div>
-                <div class="flex-1">
-                  <span class="font-semibold text-sm">Companies</span>
-                  <p class="text-xs text-slate-500 mt-1">Company Management</p>
-                </div>
-                <div v-if="$route.path === '/companies'" class="w-2 h-2 bg-emerald-500 rounded-full shadow-lg"></div>
-              </router-link>
-              
-              <router-link 
+
+              <router-link
                 to="/contracts"
                 class="group relative flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:text-white transition-all duration-300"
-                :class="{ 
+                :class="{
                   'bg-gradient-to-r from-emerald-600/20 to-teal-600/20 text-white shadow-lg border border-emerald-500/30 transform scale-105': $route.path === '/contracts',
                   'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/contracts'
                 }"
               >
                 <div class="relative">
-                                     <div class="w-11 h-11 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                     </svg>
-                   </div>
+                  <div class="w-11 h-11 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                  </div>
                   <div v-if="$route.path === '/contracts'" class="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full animate-pulse shadow-lg"></div>
                 </div>
                 <div class="flex-1">
                   <span class="font-semibold text-sm">Contracts</span>
-                  <p class="text-xs text-slate-500 mt-1">Contract Management</p>
+                  <p class="text-xs text-slate-500 mt-1">Manage Contracts</p>
                 </div>
                 <div v-if="$route.path === '/contracts'" class="w-2 h-2 bg-emerald-500 rounded-full shadow-lg"></div>
               </router-link>
@@ -310,107 +287,7 @@
             </div>
           </div>
 
-          <!-- Property Management Section -->
-          <div>
-            <div class="flex items-center space-x-3 mb-6">
-              <div class="w-1 h-8 bg-gradient-to-b from-orange-500 to-red-600 rounded-full shadow-lg"></div>
-              <h3 class="text-slate-400 text-xs font-bold uppercase tracking-widest">Properties</h3>
-            </div>
-            <div class="space-y-3">
-              <router-link 
-                to="/properties"
-                class="group relative flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:text-white transition-all duration-300"
-                :class="{ 
-                  'bg-gradient-to-r from-orange-600/20 to-red-600/20 text-white shadow-lg border border-orange-500/30 transform scale-105': $route.path === '/properties',
-                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/properties'
-                }"
-              >
-                <div class="relative">
-                                     <div class="w-11 h-11 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                     </svg>
-                   </div>
-                  <div v-if="$route.path === '/properties'" class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse shadow-lg"></div>
-                </div>
-                <div class="flex-1">
-                  <span class="font-semibold text-sm">Properties</span>
-                  <p class="text-xs text-slate-500 mt-1">Property Management</p>
-                </div>
-                <div v-if="$route.path === '/properties'" class="w-2 h-2 bg-orange-500 rounded-full shadow-lg"></div>
-              </router-link>
-              
-              <router-link 
-                to="/units"
-                class="group relative flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:text-white transition-all duration-300"
-                :class="{ 
-                  'bg-gradient-to-r from-orange-600/20 to-red-600/20 text-white shadow-lg border border-orange-500/30 transform scale-105': $route.path === '/units',
-                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/units'
-                }"
-              >
-                <div class="relative">
-                                     <div class="w-11 h-11 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5v4m8-4v4M8 11v4m8-4v4"></path>
-                     </svg>
-                   </div>
-                  <div v-if="$route.path === '/units'" class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse shadow-lg"></div>
-                </div>
-                <div class="flex-1">
-                  <span class="font-semibold text-sm">Units</span>
-                  <p class="text-xs text-slate-500 mt-1">Unit Management</p>
-                </div>
-                <div v-if="$route.path === '/units'" class="w-2 h-2 bg-orange-500 rounded-full shadow-lg"></div>
-              </router-link>
-              
-              <router-link 
-                to="/tenants"
-                class="group relative flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:text-white transition-all duration-300"
-                :class="{ 
-                  'bg-gradient-to-r from-orange-600/20 to-red-600/20 text-white shadow-lg border border-orange-500/30 transform scale-105': $route.path === '/tenants',
-                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/tenants'
-                }"
-              >
-                <div class="relative">
-                                     <div class="w-11 h-11 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                     </svg>
-                   </div>
-                  <div v-if="$route.path === '/tenants'" class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse shadow-lg"></div>
-                </div>
-                <div class="flex-1">
-                  <span class="font-semibold text-sm">Tenants</span>
-                  <p class="text-xs text-slate-500 mt-1">Tenant Management</p>
-                </div>
-                <div v-if="$route.path === '/tenants'" class="w-2 h-2 bg-orange-500 rounded-full shadow-lg"></div>
-              </router-link>
-              
-              <router-link 
-                to="/leases"
-                class="group relative flex items-center space-x-4 px-5 py-4 rounded-2xl text-slate-300 hover:text-white transition-all duration-300"
-                :class="{ 
-                  'bg-gradient-to-r from-orange-600/20 to-red-600/20 text-white shadow-lg border border-orange-500/30 transform scale-105': $route.path === '/leases',
-                  'hover:bg-white/5 hover:shadow-md hover:scale-105': $route.path !== '/leases'
-                }"
-              >
-                <div class="relative">
-                                     <div class="w-11 h-11 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                     <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                     </svg>
-                   </div>
-                  <div v-if="$route.path === '/leases'" class="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse shadow-lg"></div>
-                </div>
-                <div class="flex-1">
-                  <span class="font-semibold text-sm">Leases</span>
-                  <p class="text-xs text-slate-500 mt-1">Lease Agreements</p>
-                </div>
-                <div v-if="$route.path === '/leases'" class="w-2 h-2 bg-orange-500 rounded-full shadow-lg"></div>
-              </router-link>
-            </div>
-          </div>
+
 
           <!-- Administration Section -->
           <div>
@@ -942,10 +819,6 @@
 
 <script>
 import Dashboard from './pages/Dashboard.vue'
-import Properties from './pages/Properties.vue'
-import Units from './pages/Units.vue'
-import Tenants from './pages/Tenants.vue'
-import Leases from './pages/Leases.vue'
 import Income from './pages/Income.vue'
 import Expenses from './pages/Expenses.vue'
 import Owners from './pages/Owners.vue'
@@ -958,10 +831,6 @@ export default {
   name: 'App',
   components: {
     Dashboard,
-    Properties,
-    Units,
-    Tenants,
-    Leases,
     Income,
     Expenses,
     Owners,
@@ -997,14 +866,9 @@ export default {
       const currentRoute = this.$route.path
       const pageTitles = {
         '/': 'Dashboard',
-        '/commercial-complexes': 'Commercial Complexes',
-        '/shops': 'Shops',
-        '/companies': 'Companies',
-        '/contracts': 'Contracts',
         '/properties': 'Properties',
         '/units': 'Units',
-        '/tenants': 'Tenants',
-        '/leases': 'Leases',
+        '/contracts': 'Contracts',
         '/income': 'Income',
         '/expenses': 'Expenses',
         '/owners': 'Owners & Distributions',
@@ -1020,14 +884,9 @@ export default {
     currentPageDescription() {
       const descriptions = {
         '/': 'Overview of your property portfolio',
-        '/commercial-complexes': 'Manage commercial complexes',
-        '/shops': 'Manage commercial shops and units',
-        '/companies': 'Manage company information',
-        '/contracts': 'Manage commercial contracts',
-        '/properties': 'Manage your commercial properties',
-        '/units': 'Manage commercial units and shops',
-        '/tenants': 'Manage your property tenants',
-        '/leases': 'Track lease agreements and terms',
+        '/properties': 'Manage your properties',
+        '/units': 'Manage property units',
+        '/contracts': 'Manage contracts and leases',
         '/income': 'Track rental income and payments',
         '/expenses': 'Monitor property expenses',
         '/owners': 'Manage property owners and profit distributions',
@@ -1038,7 +897,7 @@ export default {
         '/users': 'Manage system users and permissions',
         '/reports': 'Financial reports and analytics'
       }
-      return descriptions[this.$route.path] || 'Property management system'
+              return descriptions[this.$route.path] || 'Property management system'
     }
   },
   mounted() {
@@ -1227,10 +1086,7 @@ select {
 /* Focus states */
 .focus-ring:focus {
   outline: none;
-  ring: 2px;
-  ring-color: #3b82f6;
-  ring-offset: 2px;
-  ring-offset-color: transparent;
+  box-shadow: 0 0 0 2px #3b82f6;
 }
 
 /* Enhanced glass morphism */

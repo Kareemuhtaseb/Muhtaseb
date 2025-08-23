@@ -1,0 +1,23 @@
+[
+    {
+        "id": 1,
+        "property_id": 1,
+        "amount": 500,
+        "date": "2024-01-10",
+        "description": "Maintenance"
+    },
+    {
+        "id": 2,
+        "property_id": 2,
+        "amount": 800,
+        "date": "2024-01-12",
+        "description": "Utilities"
+    },
+    {
+        "id": 3,
+        "property_id": 3,
+        "amount": 1200,
+        "date": "2024-01-14",
+        "description": "Insurance"
+    }
+]

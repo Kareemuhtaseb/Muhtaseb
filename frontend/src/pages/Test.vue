@@ -8,7 +8,7 @@ const loading = ref(false)
 async function testAPI() {
   try {
     loading.value = true
-    const response = await axios.get('/units.php')
+    const response = await axios.get('/units')
     testResult.value = `Success: ${JSON.stringify(response.data, null, 2)}`
   } catch (error) {
     testResult.value = `Error: ${error.message}`

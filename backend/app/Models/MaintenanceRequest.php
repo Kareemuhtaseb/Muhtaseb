@@ -10,9 +10,6 @@ class MaintenanceRequest extends Model
     use HasFactory;
 
     protected $fillable = [
-        'property_id',
-        'unit_id',
-        'tenant_id',
         'reported_by',
         'assigned_to',
         'title',
@@ -39,21 +36,6 @@ class MaintenanceRequest extends Model
     ];
 
     // Relationships
-    public function property()
-    {
-        return $this->belongsTo(Property::class);
-    }
-
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class);
-    }
-
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
     public function reportedBy()
     {
         return $this->belongsTo(User::class, 'reported_by');
@@ -100,46 +82,35 @@ class MaintenanceRequest extends Model
     public function getCategoryIconAttribute()
     {
         return match($this->category) {
-            'plumbing' => '🚰',
-            'electrical' => '⚡',
-            'hvac' => '❄️',
-            'structural' => '🏗️',
-            'appliance' => '🔧',
-            'other' => '📋',
-            default => '🔧'
+            'plumbing' => 'faucet',
+            'electrical' => 'bolt',
+            'hvac' => 'fan',
+            'appliance' => 'tv',
+            'structural' => 'building',
+            'pest_control' => 'bug',
+            'cleaning' => 'broom',
+            'landscaping' => 'tree',
+            'security' => 'shield',
+            'other' => 'tools',
+            default => 'wrench'
         };
-    }
-
-    public function getDaysOpenAttribute()
-    {
-        if ($this->completed_date) {
-            return $this->request_date->diffInDays($this->completed_date);
-        }
-        return $this->request_date->diffInDays(now());
-    }
-
-    public function getIsOverdueAttribute()
-    {
-        if ($this->scheduled_date && $this->status !== 'completed') {
-            return $this->scheduled_date->isPast();
-        }
-        return false;
     }
 
     // Scopes
     public function scopeOpen($query)
     {
-        return $query->where('status', 'open');
-    }
-
-    public function scopeInProgress($query)
-    {
-        return $query->where('status', 'in_progress');
+        return $query->whereIn('status', ['open', 'in_progress']);
     }
 
     public function scopeCompleted($query)
     {
         return $query->where('status', 'completed');
+    }
+
+    public function scopeOverdue($query)
+    {
+        return $query->where('scheduled_date', '<', now())
+            ->whereIn('status', ['open', 'in_progress']);
     }
 
     public function scopeByPriority($query, $priority)
@@ -152,24 +123,30 @@ class MaintenanceRequest extends Model
         return $query->where('category', $category);
     }
 
-    public function scopeOverdue($query)
-    {
-        return $query->where('scheduled_date', '<', now())
-                    ->whereNotIn('status', ['completed', 'cancelled']);
-    }
-
-    public function scopeAssignedTo($query, $userId)
+    public function scopeByAssignedTo($query, $userId)
     {
         return $query->where('assigned_to', $userId);
     }
 
-    public function scopeWithRelations($query)
+    public function scopeByReportedBy($query, $userId)
     {
-        return $query->with(['property', 'unit', 'tenant', 'reportedBy', 'assignedTo']);
+        return $query->where('reported_by', $userId);
     }
 
-    public function scopeByDateRange($query, $startDate, $endDate)
+    public function scopeWithDetails($query)
     {
-        return $query->whereBetween('request_date', [$startDate, $endDate]);
+        return $query->with(['reportedBy', 'assignedTo']);
+    }
+
+    // Boot method for automatic timestamps
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($maintenanceRequest) {
+            if (!$maintenanceRequest->request_date) {
+                $maintenanceRequest->request_date = now();
+            }
+        });
     }
 }

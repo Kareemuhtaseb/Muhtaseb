@@ -12,6 +12,12 @@ import FormField from './components/FormField.vue'
 // Configure axios
 axios.defaults.baseURL = 'http://localhost:8000/api'
 
+// Attach auth token if present
+const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token')
+if (token) {
+  axios.defaults.headers.common['Authorization'] = `Bearer ${token}`
+}
+
 // Add request interceptor for loading states
 axios.interceptors.request.use(
   config => {

@@ -3,80 +3,44 @@
 namespace App\Http\Controllers;
 
 use App\Models\Property;
-use App\Models\PropertyType;
-use App\Models\User;
+use App\Models\Unit;
+use App\Models\Contract;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Cache;
-use Spatie\QueryBuilder\QueryBuilder;
-use Spatie\QueryBuilder\AllowedFilter;
+use Carbon\Carbon;
 
 class PropertyController extends Controller
 {
     /**
-     * Display a listing of properties with relationships.
+     * Display a listing of properties.
      */
     public function index(Request $request): JsonResponse
     {
-        $cacheKey = 'properties_' . md5(serialize($request->all()));
-        
-        return Cache::remember($cacheKey, 300, function () use ($request) {
-            $query = QueryBuilder::for(Property::class)
-                ->allowedFilters([
-                    AllowedFilter::exact('property_type_id'),
-                    AllowedFilter::partial('name'),
-                    AllowedFilter::partial('location'),
-                    AllowedFilter::scope('active'),
-                ])
-                ->allowedSorts(['name', 'created_at', 'updated_at']);
+        $query = Property::query();
 
-            // Apply search filter
-            if ($request->has('search')) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                      ->orWhere('location', 'like', "%{$search}%");
-                });
-            }
+        // Apply filters
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
 
-            // Load relationships based on request
-            $withRelations = ['propertyType', 'createdBy'];
-            
-            if ($request->boolean('with_units')) {
-                $withRelations[] = 'units.leases.tenant';
-                $withRelations[] = 'units.unitType';
-            }
-            if ($request->boolean('with_owners')) {
-                $withRelations[] = 'owners';
-            }
-            if ($request->boolean('with_financials')) {
-                $withRelations[] = 'income';
-                $withRelations[] = 'expenses';
-                $withRelations[] = 'monthlySummaries';
-            }
-            if ($request->boolean('with_maintenance')) {
-                $withRelations[] = 'maintenanceRequests.assignedTo';
-            }
-            if ($request->boolean('with_documents')) {
-                $withRelations[] = 'propertyDocuments';
-            }
+        if ($request->has('property_type')) {
+            $query->where('property_type', $request->property_type);
+        }
 
-            $properties = $query->with($withRelations)
-                               ->paginate($request->get('per_page', 15));
+        if ($request->has('name')) {
+            $query->where('name', 'like', '%' . $request->name . '%');
+        }
 
-            return response()->json([
-                'success' => true,
-                'data' => $properties->items(),
-                'pagination' => [
-                    'current_page' => $properties->currentPage(),
-                    'last_page' => $properties->lastPage(),
-                    'per_page' => $properties->perPage(),
-                    'total' => $properties->total(),
-                ]
-            ]);
-        });
+        // Load relationships
+        $query->with(['units', 'contracts', 'income', 'expenses']);
+
+        $properties = $query->orderBy('created_at', 'desc')
+                           ->paginate($request->get('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $properties
+        ]);
     }
 
     /**
@@ -84,80 +48,48 @@ class PropertyController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'location' => 'required|string',
-            'property_type_id' => 'nullable|exists:property_types,id',
-            'notes' => 'nullable|string',
+            'address' => 'required|string|max:500',
+            'property_type' => 'required|in:residential,commercial,industrial,mixed',
+            'status' => 'required|in:active,inactive,sold,under_construction',
+            'purchase_date' => 'nullable|date',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'current_value' => 'nullable|numeric|min:0',
+            'total_area' => 'nullable|numeric|min:0',
+            'units_count' => 'nullable|integer|min:0',
+            'description' => 'nullable|string',
+            'notes' => 'nullable|string'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $property = Property::create([
-            'name' => $request->name,
-            'location' => $request->location,
-            'property_type_id' => $request->property_type_id,
-            'notes' => $request->notes,
-            'created_by' => Auth::id(),
-            'updated_by' => Auth::id(),
-        ]);
-
-        // Clear related caches
-        Cache::forget('properties_*');
-        Cache::forget('dashboard_stats');
+        $property = Property::create($validated);
+        $property->load(['units', 'contracts']);
 
         return response()->json([
             'success' => true,
-            'data' => $property->load(['propertyType', 'createdBy']),
-            'message' => 'Property created successfully'
+            'message' => 'Property created successfully',
+            'data' => $property
         ], 201);
     }
 
     /**
      * Display the specified property.
      */
-    public function show(Request $request, Property $property): JsonResponse
+    public function show(Property $property): JsonResponse
     {
-        $cacheKey = 'property_' . $property->id . '_' . md5(serialize($request->all()));
-        
-        return Cache::remember($cacheKey, 300, function () use ($request, $property) {
-            $withRelations = ['propertyType', 'createdBy', 'updatedBy'];
+        $property->load(['units', 'contracts', 'income', 'expenses', 'owners']);
 
-            // Load relationships based on request
-            if ($request->boolean('with_units')) {
-                $withRelations[] = 'units.leases.tenant';
-                $withRelations[] = 'units.unitType';
-            }
-            if ($request->boolean('with_owners')) {
-                $withRelations[] = 'owners';
-            }
-            if ($request->boolean('with_financials')) {
-                $withRelations[] = 'income';
-                $withRelations[] = 'expenses';
-                $withRelations[] = 'monthlySummaries';
-            }
-            if ($request->boolean('with_maintenance')) {
-                $withRelations[] = 'maintenanceRequests.assignedTo';
-            }
-            if ($request->boolean('with_documents')) {
-                $withRelations[] = 'propertyDocuments';
-            }
-            if ($request->boolean('with_payments')) {
-                $withRelations[] = 'payments.tenant';
-            }
+        // Add financial analysis
+        $financialReport = $property->getFinancialReport();
+        $varianceReport = $property->getIncomeVarianceReport();
 
-            $property->load($withRelations);
-
-            return response()->json([
-                'success' => true,
-                'data' => $property
-            ]);
-        });
+        return response()->json([
+            'success' => true,
+            'data' => array_merge($property->toArray(), [
+                'financial_report' => $financialReport,
+                'variance_analysis' => $varianceReport
+            ])
+        ]);
     }
 
     /**
@@ -165,37 +97,27 @@ class PropertyController extends Controller
      */
     public function update(Request $request, Property $property): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|required|string|max:255',
-            'location' => 'sometimes|required|string',
-            'property_type_id' => 'sometimes|nullable|exists:property_types,id',
-            'notes' => 'sometimes|nullable|string',
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'address' => 'sometimes|string|max:500',
+            'property_type' => 'sometimes|in:residential,commercial,industrial,mixed',
+            'status' => 'sometimes|in:active,inactive,sold,under_construction',
+            'purchase_date' => 'nullable|date',
+            'purchase_price' => 'nullable|numeric|min:0',
+            'current_value' => 'nullable|numeric|min:0',
+            'total_area' => 'nullable|numeric|min:0',
+            'units_count' => 'nullable|integer|min:0',
+            'description' => 'nullable|string',
+            'notes' => 'nullable|string'
         ]);
 
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $property->update([
-            'name' => $request->name ?? $property->name,
-            'location' => $request->location ?? $property->location,
-            'property_type_id' => $request->property_type_id ?? $property->property_type_id,
-            'notes' => $request->notes ?? $property->notes,
-            'updated_by' => Auth::id(),
-        ]);
-
-        // Clear related caches
-        Cache::forget('properties_*');
-        Cache::forget('property_' . $property->id . '_*');
-        Cache::forget('dashboard_stats');
+        $property->update($validated);
+        $property->load(['units', 'contracts']);
 
         return response()->json([
             'success' => true,
-            'data' => $property->load(['propertyType', 'createdBy', 'updatedBy']),
-            'message' => 'Property updated successfully'
+            'message' => 'Property updated successfully',
+            'data' => $property
         ]);
     }
 
@@ -206,11 +128,6 @@ class PropertyController extends Controller
     {
         $property->delete();
 
-        // Clear related caches
-        Cache::forget('properties_*');
-        Cache::forget('property_' . $property->id . '_*');
-        Cache::forget('dashboard_stats');
-
         return response()->json([
             'success' => true,
             'message' => 'Property deleted successfully'
@@ -218,28 +135,175 @@ class PropertyController extends Controller
     }
 
     /**
+     * Get property financial report.
+     */
+    public function financialReport(Request $request, Property $property): JsonResponse
+    {
+        $startDate = $request->get('start_date') ? Carbon::parse($request->start_date) : now()->startOfYear();
+        $endDate = $request->get('end_date') ? Carbon::parse($request->end_date) : now()->endOfYear();
+
+        $report = $property->getFinancialReport($startDate, $endDate);
+
+        return response()->json([
+            'success' => true,
+            'data' => $report
+        ]);
+    }
+
+    /**
+     * Get property units.
+     */
+    public function units(Property $property): JsonResponse
+    {
+        $units = $property->units()->with(['contracts', 'income', 'expenses'])->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $units
+        ]);
+    }
+
+    /**
+     * Get property income.
+     */
+    public function income(Request $request, Property $property): JsonResponse
+    {
+        $query = $property->income()->with(['category', 'contract']);
+
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        }
+
+        $income = $query->orderBy('date', 'desc')->paginate($request->get('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $income
+        ]);
+    }
+
+    /**
+     * Get property expenses.
+     */
+    public function expenses(Request $request, Property $property): JsonResponse
+    {
+        $query = $property->expenses()->with(['category']);
+
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('date', [$request->start_date, $request->end_date]);
+        }
+
+        $expenses = $query->orderBy('date', 'desc')->paginate($request->get('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $expenses
+        ]);
+    }
+
+    /**
+     * Get property contracts.
+     */
+    public function contracts(Request $request, Property $property): JsonResponse
+    {
+        $query = $property->contracts()->with(['category', 'unit']);
+
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
+        }
+
+        $contracts = $query->orderBy('created_at', 'desc')->paginate($request->get('per_page', 15));
+
+        return response()->json([
+            'success' => true,
+            'data' => $contracts
+        ]);
+    }
+
+    /**
      * Get property statistics.
      */
-    public function stats(): JsonResponse
+    public function statistics(Property $property): JsonResponse
     {
-        return Cache::remember('property_stats', 600, function () {
-            $stats = [
-                'total_properties' => Property::count(),
-                'active_properties' => Property::active()->count(),
-                'total_units' => Property::withCount('units')->get()->sum('units_count'),
-                'occupied_units' => Property::with(['units' => function ($q) {
-                    $q->where('status', 'occupied');
-                }])->get()->sum(function ($property) {
-                    return $property->units->count();
-                }),
-                'total_income' => Property::withSum('income', 'amount')->get()->sum('income_sum_amount'),
-                'total_expenses' => Property::withSum('expenses', 'amount')->get()->sum('expenses_sum_amount'),
-            ];
+        $stats = [
+            'total_units' => $property->units()->count(),
+            'occupied_units' => $property->units()->where('status', 'occupied')->count(),
+            'available_units' => $property->units()->where('status', 'available')->count(),
+            'maintenance_units' => $property->units()->where('status', 'maintenance')->count(),
+            'occupancy_rate' => $property->occupancy_rate,
+            'active_contracts' => $property->contracts()->active()->count(),
+            'expired_contracts' => $property->contracts()->expired()->count(),
+            'total_income' => $property->total_income,
+            'total_expenses' => $property->total_expenses,
+            'net_income' => $property->net_income,
+            'expected_income' => $property->expected_income,
+            'actual_income' => $property->actual_income,
+            'variance' => $property->variance,
+            'variance_percentage' => $property->variance_percentage,
+            'roi' => $property->roi
+        ];
 
-            return response()->json([
-                'success' => true,
-                'data' => $stats
-            ]);
-        });
+        return response()->json([
+            'success' => true,
+            'data' => $stats
+        ]);
+    }
+
+    /**
+     * Get all properties financial summary.
+     */
+    public function financialSummary(Request $request): JsonResponse
+    {
+        $period = $request->get('period', 'all');
+        $startDate = null;
+        $endDate = null;
+
+        switch ($period) {
+            case 'current_month':
+                $startDate = now()->startOfMonth();
+                $endDate = now()->endOfMonth();
+                break;
+            case 'current_year':
+                $startDate = now()->startOfYear();
+                $endDate = now()->endOfYear();
+                break;
+            case 'custom':
+                $startDate = Carbon::parse($request->start_date);
+                $endDate = Carbon::parse($request->end_date);
+                break;
+        }
+
+        $properties = Property::with(['units', 'contracts', 'income', 'expenses'])->get();
+        $summary = [];
+
+        foreach ($properties as $property) {
+            $report = $property->getFinancialReport($startDate, $endDate);
+            $summary[] = $report;
+        }
+
+        $totalExpected = collect($summary)->sum('income.expected');
+        $totalActual = collect($summary)->sum('income.actual');
+        $totalExpenses = collect($summary)->sum('expenses');
+        $totalNetIncome = collect($summary)->sum('net_income');
+
+        $overallSummary = [
+            'total_properties' => count($properties),
+            'active_properties' => $properties->where('status', 'active')->count(),
+            'total_expected_income' => $totalExpected,
+            'total_actual_income' => $totalActual,
+            'total_expenses' => $totalExpenses,
+            'total_net_income' => $totalNetIncome,
+            'overall_variance' => $totalExpected - $totalActual,
+            'overall_variance_percentage' => $totalExpected > 0 ? (($totalExpected - $totalActual) / $totalExpected) * 100 : 0,
+            'period' => $period,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'properties' => $summary
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $overallSummary
+        ]);
     }
 }

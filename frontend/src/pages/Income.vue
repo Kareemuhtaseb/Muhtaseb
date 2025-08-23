@@ -367,8 +367,14 @@ export default {
   methods: {
     async loadIncomeRecords() {
       try {
-        const response = await this.$http.get('/income.php')
-        this.incomeRecords = response.data
+        try {
+          const response = await this.$http.get('/income')
+          this.incomeRecords = response.data?.data?.data || response.data?.data || response.data || []
+        } catch (e) {
+          console.warn('Laravel GET /income failed, falling back to /income.php')
+          const response = await this.$http.get('/income.php')
+          this.incomeRecords = response.data
+        }
       } catch (error) {
         console.error('Error loading income records:', error)
         this.incomeRecords = []
@@ -378,8 +384,14 @@ export default {
     },
     async loadProperties() {
       try {
-        const response = await this.$http.get('/properties.php')
-        this.properties = response.data
+        try {
+          const response = await this.$http.get('/properties')
+          this.properties = response.data?.data?.data || response.data?.data || response.data || []
+        } catch (e) {
+          console.warn('Laravel GET /properties failed, falling back to /properties.php')
+          const response = await this.$http.get('/properties.php')
+          this.properties = response.data
+        }
       } catch (error) {
         console.error('Error loading properties:', error)
         this.properties = []
@@ -387,8 +399,14 @@ export default {
     },
     async loadUnits() {
       try {
-        const response = await this.$http.get('/units.php')
-        this.units = response.data
+        try {
+          const response = await this.$http.get('/units')
+          this.units = response.data?.data?.data || response.data?.data || response.data || []
+        } catch (e) {
+          console.warn('Laravel GET /units failed, falling back to /units.php')
+          const response = await this.$http.get('/units.php')
+          this.units = response.data
+        }
       } catch (error) {
         console.error('Error loading units:', error)
         this.units = []
@@ -396,8 +414,14 @@ export default {
     },
     async loadTenants() {
       try {
-        const response = await this.$http.get('/tenants.php')
-        this.tenants = response.data
+        try {
+          const response = await this.$http.get('/tenants')
+          this.tenants = response.data?.data?.data || response.data?.data || response.data || []
+        } catch (e) {
+          console.warn('Laravel GET /tenants failed, falling back to /tenants.php')
+          const response = await this.$http.get('/tenants.php')
+          this.tenants = response.data
+        }
       } catch (error) {
         console.error('Error loading tenants:', error)
         this.tenants = []
@@ -405,8 +429,15 @@ export default {
     },
     async loadCategories() {
       try {
-        const response = await this.$http.get('/categories.php?type=income')
-        this.incomeCategories = response.data
+        try {
+          const response = await this.$http.get('/categories')
+          const cats = response.data?.data?.data || response.data?.data || response.data || []
+          this.incomeCategories = (Array.isArray(cats) ? cats : []).filter(c => c.type === 'income')
+        } catch (e) {
+          console.warn('Laravel GET /categories failed, falling back to /categories.php')
+          const response = await this.$http.get('/categories.php?type=income')
+          this.incomeCategories = response.data
+        }
       } catch (error) {
         console.error('Error loading categories:', error)
         this.incomeCategories = []
@@ -423,7 +454,12 @@ export default {
       }
 
       try {
-        await this.$http.delete(`/income.php?id=${id}`)
+        try {
+          await this.$http.delete(`/income/${id}`)
+        } catch (e) {
+          console.warn('Laravel DELETE /income/:id failed, falling back to /income.php')
+          await this.$http.delete(`/income.php?id=${id}`)
+        }
         await this.loadIncomeRecords()
       } catch (error) {
         console.error('Error deleting income record:', error)
@@ -434,9 +470,9 @@ export default {
       this.saving = true
       try {
         if (this.showEditModal) {
-          await this.$http.put(`/income.php?id=${this.selectedRecord.id}`, this.form)
+          await this.$http.put(`/income/${this.selectedRecord.id}`, this.form)
         } else {
-          await this.$http.post('/income.php', this.form)
+          await this.$http.post('/income', this.form)
         }
         await this.loadIncomeRecords()
         this.closeModal()

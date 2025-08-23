@@ -11,9 +11,13 @@ return new class extends Migration
         Schema::create('owners', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->decimal('share_percentage', 5, 2); // Up to 100.00%
             $table->string('email')->nullable();
             $table->string('phone')->nullable();
+            $table->text('address')->nullable();
+            $table->string('tax_id')->nullable();
+            $table->string('bank_account')->nullable();
+            $table->decimal('ownership_percentage', 5, 2)->default(100); // Up to 100.00%
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }

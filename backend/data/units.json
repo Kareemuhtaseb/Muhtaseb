@@ -1,0 +1,30 @@
+[
+    {
+        "id": 1,
+        "property_id": 1,
+        "unit_number": "A101",
+        "monthly_rent_expected": 1200,
+        "status": "occupied"
+    },
+    {
+        "id": 2,
+        "property_id": 1,
+        "unit_number": "A102",
+        "monthly_rent_expected": 1200,
+        "status": "available"
+    },
+    {
+        "id": 3,
+        "property_id": 2,
+        "unit_number": "B201",
+        "monthly_rent_expected": 2500,
+        "status": "occupied"
+    },
+    {
+        "id": 4,
+        "property_id": 3,
+        "unit_number": "C301",
+        "monthly_rent_expected": 3000,
+        "status": "occupied"
+    }
+]

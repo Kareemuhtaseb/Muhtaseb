@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Muhtaseb System Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: rgba(76, 175, 80, 0.3); }
+        .error { background: rgba(244, 67, 54, 0.3); }
+        .info { background: rgba(33, 150, 243, 0.3); }
+        button {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .data {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏢 Muhtaseb System Test</h1>
+        
+        <div class="status info">
+            <h3>System Status</h3>
+            <div id="status">Checking system status...</div>
+        </div>
+
+        <div class="status info">
+            <h3>API Endpoints Test</h3>
+            <button onclick="testAPI()">Test API Endpoints</button>
+            <div id="apiResults"></div>
+        </div>
+
+        <div class="status info">
+            <h3>Frontend Test</h3>
+            <button onclick="testFrontend()">Test Frontend</button>
+            <div id="frontendResults"></div>
+        </div>
+
+        <div class="status info">
+            <h3>Database Test</h3>
+            <button onclick="testDatabase()">Test Database</button>
+            <div id="databaseResults"></div>
+        </div>
+
+        <div class="status success">
+            <h3>✅ System Ready!</h3>
+            <p><strong>Frontend URL:</strong> <a href="http://localhost:5173" target="_blank" style="color: white;">http://localhost:5173</a></p>
+            <p><strong>Backend API:</strong> <a href="http://localhost:8000" target="_blank" style="color: white;">http://localhost:8000</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Test API endpoints
+        async function testAPI() {
+            const results = document.getElementById('apiResults');
+            results.innerHTML = '<div class="status info">Testing API endpoints...</div>';
+            
+            const endpoints = [
+                { name: 'Dashboard', url: 'http://localhost:8000/dashboard' },
+                { name: 'Properties', url: 'http://localhost:8000/properties' },
+                { name: 'Units', url: 'http://localhost:8000/units' },
+                { name: 'Income', url: 'http://localhost:8000/income' },
+                { name: 'Expenses', url: 'http://localhost:8000/expenses' },
+                { name: 'Owners', url: 'http://localhost:8000/owners' },
+                { name: 'Contracts', url: 'http://localhost:8000/contracts' }
+            ];
+
+            let html = '';
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch(endpoint.url);
+                    if (response.ok) {
+                        const data = await response.json();
+                        html += `<div class="status success">✅ ${endpoint.name}: ${Array.isArray(data) ? data.length + ' records' : 'Success'}</div>`;
+                    } else {
+                        html += `<div class="status error">❌ ${endpoint.name}: HTTP ${response.status}</div>`;
+                    }
+                } catch (error) {
+                    html += `<div class="status error">❌ ${endpoint.name}: ${error.message}</div>`;
+                }
+            }
+            
+            results.innerHTML = html;
+        }
+
+        // Test frontend
+        async function testFrontend() {
+            const results = document.getElementById('frontendResults');
+            results.innerHTML = '<div class="status info">Testing frontend...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5173');
+                if (response.ok) {
+                    results.innerHTML = '<div class="status success">✅ Frontend is running successfully!</div>';
+                } else {
+                    results.innerHTML = `<div class="status error">❌ Frontend error: HTTP ${response.status}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="status error">❌ Frontend not accessible: ${error.message}</div>`;
+            }
+        }
+
+        // Test database
+        async function testDatabase() {
+            const results = document.getElementById('databaseResults');
+            results.innerHTML = '<div class="status info">Testing database...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:8000/dashboard');
+                if (response.ok) {
+                    const data = await response.json();
+                    results.innerHTML = `
+                        <div class="status success">✅ Database is working!</div>
+                        <div class="data">
+                            <h4>Dashboard Data:</h4>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = `<div class="status error">❌ Database error: HTTP ${response.status}</div>`;
+                }
+            } catch (error) {
+                results.innerHTML = `<div class="status error">❌ Database not accessible: ${error.message}</div>`;
+            }
+        }
+
+        // Check system status on load
+        window.onload = function() {
+            const status = document.getElementById('status');
+            
+            // Check if servers are running
+            Promise.all([
+                fetch('http://localhost:8000/dashboard').then(r => r.ok).catch(() => false),
+                fetch('http://localhost:5173').then(r => r.ok).catch(() => false)
+            ]).then(([backend, frontend]) => {
+                let statusHtml = '';
+                if (backend) {
+                    statusHtml += '<div class="status success">✅ Backend API Server: Running</div>';
+                } else {
+                    statusHtml += '<div class="status error">❌ Backend API Server: Not Running</div>';
+                }
+                
+                if (frontend) {
+                    statusHtml += '<div class="status success">✅ Frontend Server: Running</div>';
+                } else {
+                    statusHtml += '<div class="status error">❌ Frontend Server: Not Running</div>';
+                }
+                
+                status.innerHTML = statusHtml;
+            }).catch(() => {
+                status.innerHTML = '<div class="status error">❌ Unable to check server status</div>';
+            });
+        };
+    </script>
+</body>
+</html>

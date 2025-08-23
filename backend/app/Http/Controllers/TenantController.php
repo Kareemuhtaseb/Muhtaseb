@@ -1,62 +1,57 @@
 <?php
+
 namespace App\Http\Controllers;
 
 use App\Models\Tenant;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
-/**
- * @OA\Info(title="Rental API", version="1.0")
- */
 class TenantController extends Controller
 {
-    /**
-     * @OA\Get(
-     *   path="/api/tenants",
-     *   @OA\Response(response=200, description="List tenants")
-     * )
-     */
-    public function index()
+    public function index(): JsonResponse
     {
-        return Tenant::with(['unit' => function($query) {
-            $query->select('id', 'unit_number');
-        }])->select('id', 'name', 'phone', 'email', 'unit_id', 'start_date', 'end_date')->get();
+        $tenants = Tenant::orderBy('full_name')->paginate(50);
+        return response()->json($tenants);
     }
 
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'required',
-            'phone' => 'required',
-            'email' => 'required|email|unique:tenants,email',
-            'unit_id' => 'required|exists:units,id',
-            'start_date' => 'required|date',
-            'end_date' => 'nullable|date'
+        $validated = $request->validate([
+            'full_name' => 'required|string|max:255',
+            'contact' => 'nullable|string|max:255',
+            'lease_start' => 'nullable|date',
+            'lease_end' => 'nullable|date',
+            'deposit' => 'nullable|numeric|min:0'
         ]);
-        return Tenant::create($data);
+
+        $tenant = Tenant::create($validated);
+        return response()->json($tenant, 201);
     }
 
-    public function show(Tenant $tenant)
+    public function show(Tenant $tenant): JsonResponse
     {
-        return $tenant->load('unit','payments');
+        return response()->json($tenant);
     }
 
-    public function update(Request $request, Tenant $tenant)
+    public function update(Request $request, Tenant $tenant): JsonResponse
     {
-        $data = $request->validate([
-            'name' => 'sometimes',
-            'phone' => 'sometimes',
-            'email' => 'sometimes|email|unique:tenants,email,'.$tenant->id,
-            'unit_id' => 'sometimes|exists:units,id',
-            'start_date' => 'sometimes|date',
-            'end_date' => 'nullable|date'
+        $validated = $request->validate([
+            'full_name' => 'sometimes|string|max:255',
+            'contact' => 'sometimes|string|max:255',
+            'lease_start' => 'sometimes|date',
+            'lease_end' => 'sometimes|date',
+            'deposit' => 'sometimes|numeric|min:0'
         ]);
-        $tenant->update($data);
-        return $tenant;
+
+        $tenant->update($validated);
+        return response()->json($tenant);
     }
 
-    public function destroy(Tenant $tenant)
+    public function destroy(Tenant $tenant): JsonResponse
     {
         $tenant->delete();
-        return response()->noContent();
+        return response()->json(null, 204);
     }
 }
+
+

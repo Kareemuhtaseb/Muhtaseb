@@ -3,9 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\MaintenanceRequest;
-use App\Models\Property;
-use App\Models\Unit;
-use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -34,14 +31,6 @@ class MaintenanceController extends Controller
             $query->where('category', $request->category);
         }
 
-        if ($request->has('property_id')) {
-            $query->where('property_id', $request->property_id);
-        }
-
-        if ($request->has('unit_id')) {
-            $query->where('unit_id', $request->unit_id);
-        }
-
         if ($request->has('assigned_to')) {
             $query->where('assigned_to', $request->assigned_to);
         }
@@ -51,7 +40,7 @@ class MaintenanceController extends Controller
         }
 
         // Load relationships
-        $query->with(['property', 'unit', 'tenant', 'reportedBy', 'assignedTo']);
+        $query->with(['reportedBy', 'assignedTo']);
 
         $maintenanceRequests = $query->orderBy('request_date', 'desc')
                                    ->paginate($request->get('per_page', 15));
@@ -68,17 +57,15 @@ class MaintenanceController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'property_id' => 'required|exists:properties,id',
-            'unit_id' => 'nullable|exists:units,id',
-            'tenant_id' => 'nullable|exists:tenants,id',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'priority' => 'required|in:low,medium,high,urgent',
-            'category' => 'required|in:plumbing,electrical,hvac,structural,appliance,other',
+            'category' => 'required|in:plumbing,electrical,hvac,structural,appliance,pest_control,cleaning,landscaping,security,other',
             'request_date' => 'required|date',
             'scheduled_date' => 'nullable|date|after_or_equal:request_date',
             'estimated_cost' => 'nullable|numeric|min:0',
             'notes' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -89,9 +76,6 @@ class MaintenanceController extends Controller
         }
 
         $maintenanceRequest = MaintenanceRequest::create([
-            'property_id' => $request->property_id,
-            'unit_id' => $request->unit_id,
-            'tenant_id' => $request->tenant_id,
             'reported_by' => Auth::id(),
             'assigned_to' => $request->assigned_to,
             'title' => $request->title,
@@ -104,7 +88,7 @@ class MaintenanceController extends Controller
             'notes' => $request->notes,
         ]);
 
-        $maintenanceRequest->load(['property', 'unit', 'tenant', 'reportedBy', 'assignedTo']);
+        $maintenanceRequest->load(['reportedBy', 'assignedTo']);
 
         return response()->json([
             'success' => true,
@@ -118,7 +102,7 @@ class MaintenanceController extends Controller
      */
     public function show(MaintenanceRequest $maintenanceRequest): JsonResponse
     {
-        $maintenanceRequest->load(['property', 'unit', 'tenant', 'reportedBy', 'assignedTo']);
+        $maintenanceRequest->load(['reportedBy', 'assignedTo']);
 
         return response()->json([
             'success' => true,
@@ -132,17 +116,17 @@ class MaintenanceController extends Controller
     public function update(Request $request, MaintenanceRequest $maintenanceRequest): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'sometimes|required|string',
-            'priority' => 'sometimes|required|in:low,medium,high,urgent',
-            'category' => 'sometimes|required|in:plumbing,electrical,hvac,structural,appliance,other',
-            'status' => 'sometimes|required|in:open,in_progress,completed,cancelled',
-            'scheduled_date' => 'sometimes|nullable|date',
-            'completed_date' => 'sometimes|nullable|date',
-            'estimated_cost' => 'sometimes|nullable|numeric|min:0',
-            'actual_cost' => 'sometimes|nullable|numeric|min:0',
-            'assigned_to' => 'sometimes|nullable|exists:users,id',
-            'notes' => 'sometimes|nullable|string',
+            'title' => 'sometimes|string|max:255',
+            'description' => 'sometimes|string',
+            'priority' => 'sometimes|in:low,medium,high,urgent',
+            'category' => 'sometimes|in:plumbing,electrical,hvac,structural,appliance,pest_control,cleaning,landscaping,security,other',
+            'status' => 'sometimes|in:open,in_progress,completed,cancelled',
+            'scheduled_date' => 'nullable|date',
+            'completed_date' => 'nullable|date',
+            'estimated_cost' => 'nullable|numeric|min:0',
+            'actual_cost' => 'nullable|numeric|min:0',
+            'notes' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
         ]);
 
         if ($validator->fails()) {
@@ -155,10 +139,10 @@ class MaintenanceController extends Controller
         $maintenanceRequest->update($request->only([
             'title', 'description', 'priority', 'category', 'status',
             'scheduled_date', 'completed_date', 'estimated_cost', 'actual_cost',
-            'assigned_to', 'notes'
+            'notes', 'assigned_to'
         ]));
 
-        $maintenanceRequest->load(['property', 'unit', 'tenant', 'reportedBy', 'assignedTo']);
+        $maintenanceRequest->load(['reportedBy', 'assignedTo']);
 
         return response()->json([
             'success' => true,
@@ -187,8 +171,6 @@ class MaintenanceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'assigned_to' => 'required|exists:users,id',
-            'scheduled_date' => 'nullable|date',
-            'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -200,12 +182,10 @@ class MaintenanceController extends Controller
 
         $maintenanceRequest->update([
             'assigned_to' => $request->assigned_to,
-            'scheduled_date' => $request->scheduled_date,
-            'status' => 'in_progress',
-            'notes' => $request->notes,
+            'status' => 'in_progress'
         ]);
 
-        $maintenanceRequest->load(['property', 'unit', 'tenant', 'reportedBy', 'assignedTo']);
+        $maintenanceRequest->load(['reportedBy', 'assignedTo']);
 
         return response()->json([
             'success' => true,
@@ -238,7 +218,7 @@ class MaintenanceController extends Controller
             'notes' => $request->notes,
         ]);
 
-        $maintenanceRequest->load(['property', 'unit', 'tenant', 'reportedBy', 'assignedTo']);
+        $maintenanceRequest->load(['reportedBy', 'assignedTo']);
 
         return response()->json([
             'success' => true,
@@ -250,24 +230,24 @@ class MaintenanceController extends Controller
     /**
      * Get maintenance statistics.
      */
-    public function statistics(Request $request): JsonResponse
+    public function statistics(): JsonResponse
     {
-        $query = MaintenanceRequest::query();
-
-        if ($request->has('property_id')) {
-            $query->where('property_id', $request->property_id);
-        }
-
         $stats = [
-            'total_requests' => $query->count(),
-            'open_requests' => $query->clone()->where('status', 'open')->count(),
-            'in_progress_requests' => $query->clone()->where('status', 'in_progress')->count(),
-            'completed_requests' => $query->clone()->where('status', 'completed')->count(),
-            'overdue_requests' => $query->clone()->overdue()->count(),
-            'urgent_requests' => $query->clone()->where('priority', 'urgent')->count(),
-            'high_priority_requests' => $query->clone()->where('priority', 'high')->count(),
-            'total_estimated_cost' => $query->clone()->sum('estimated_cost'),
-            'total_actual_cost' => $query->clone()->where('status', 'completed')->sum('actual_cost'),
+            'total' => MaintenanceRequest::count(),
+            'open' => MaintenanceRequest::where('status', 'open')->count(),
+            'in_progress' => MaintenanceRequest::where('status', 'in_progress')->count(),
+            'completed' => MaintenanceRequest::where('status', 'completed')->count(),
+            'overdue' => MaintenanceRequest::overdue()->count(),
+            'by_priority' => [
+                'urgent' => MaintenanceRequest::where('priority', 'urgent')->count(),
+                'high' => MaintenanceRequest::where('priority', 'high')->count(),
+                'medium' => MaintenanceRequest::where('priority', 'medium')->count(),
+                'low' => MaintenanceRequest::where('priority', 'low')->count(),
+            ],
+            'by_category' => MaintenanceRequest::selectRaw('category, count(*) as count')
+                ->groupBy('category')
+                ->pluck('count', 'category')
+                ->toArray(),
         ];
 
         return response()->json([
@@ -277,30 +257,16 @@ class MaintenanceController extends Controller
     }
 
     /**
-     * Get maintenance requests by property.
+     * Get maintenance requests by assigned user.
      */
-    public function byProperty(Property $property): JsonResponse
+    public function byAssignedTo(Request $request): JsonResponse
     {
-        $maintenanceRequests = $property->maintenanceRequests()
-            ->with(['unit', 'tenant', 'reportedBy', 'assignedTo'])
-            ->orderBy('request_date', 'desc')
-            ->get();
+        $userId = $request->get('user_id', Auth::id());
 
-        return response()->json([
-            'success' => true,
-            'data' => $maintenanceRequests
-        ]);
-    }
-
-    /**
-     * Get maintenance requests by unit.
-     */
-    public function byUnit(Unit $unit): JsonResponse
-    {
-        $maintenanceRequests = $unit->maintenanceRequests()
-            ->with(['property', 'tenant', 'reportedBy', 'assignedTo'])
+        $maintenanceRequests = MaintenanceRequest::where('assigned_to', $userId)
+            ->with(['reportedBy', 'assignedTo'])
             ->orderBy('request_date', 'desc')
-            ->get();
+            ->paginate($request->get('per_page', 15));
 
         return response()->json([
             'success' => true,

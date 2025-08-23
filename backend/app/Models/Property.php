@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Carbon\Carbon;
 
 class Property extends Model
 {
@@ -11,22 +12,32 @@ class Property extends Model
 
     protected $fillable = [
         'name',
-        'location',
-        'property_type_id',
-        'notes',
-        'created_by',
-        'updated_by'
+        'address',
+        'property_type', // residential, commercial, industrial, mixed
+        'status', // active, inactive, sold, under_construction
+        'purchase_date',
+        'purchase_price',
+        'current_value',
+        'total_area',
+        'units_count',
+        'description',
+        'notes'
     ];
 
     protected $casts = [
+        'purchase_date' => 'date',
+        'purchase_price' => 'decimal:2',
+        'current_value' => 'decimal:2',
+        'total_area' => 'decimal:2',
+        'units_count' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
 
     // Relationships
-    public function units()
+    public function contracts()
     {
-        return $this->hasMany(Unit::class);
+        return $this->hasMany(Contract::class);
     }
 
     public function income()
@@ -39,73 +50,19 @@ class Property extends Model
         return $this->hasMany(Expense::class);
     }
 
-    public function monthlySummaries()
+    public function units()
     {
-        return $this->hasMany(MonthlySummary::class);
+        return $this->hasMany(Unit::class);
     }
 
-    public function maintenanceRequests()
-    {
-        return $this->hasMany(MaintenanceRequest::class);
-    }
-
-    public function propertyDocuments()
-    {
-        return $this->hasMany(PropertyDocument::class);
-    }
-
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class);
-    }
-
-    public function payments()
-    {
-        return $this->hasMany(Payment::class);
-    }
-
-    public function ownerDistributions()
-    {
-        return $this->hasMany(OwnerDistribution::class);
-    }
-
-    public function invoices()
-    {
-        return $this->hasMany(Invoice::class);
-    }
-
-    // Many-to-many relationships
     public function owners()
     {
-        return $this->belongsToMany(Owner::class, 'property_owner')
-                    ->withPivot('ownership_percentage', 'ownership_start_date', 'ownership_end_date', 'status', 'notes')
+        return $this->belongsToMany(Owner::class, 'property_owners')
+                    ->withPivot('ownership_percentage', 'purchase_date', 'purchase_price')
                     ->withTimestamps();
     }
 
-    public function users()
-    {
-        return $this->belongsToMany(User::class, 'user_property_access')
-                    ->withPivot('access_level', 'access_start_date', 'access_end_date', 'status', 'notes')
-                    ->withTimestamps();
-    }
-
-    // Belongs to relationships
-    public function propertyType()
-    {
-        return $this->belongsTo(PropertyType::class);
-    }
-
-    public function createdBy()
-    {
-        return $this->belongsTo(User::class, 'created_by');
-    }
-
-    public function updatedBy()
-    {
-        return $this->belongsTo(User::class, 'updated_by');
-    }
-
-    // Accessor methods
+    // Accessors
     public function getTotalIncomeAttribute()
     {
         return $this->income()->sum('amount');
@@ -121,57 +78,123 @@ class Property extends Model
         return $this->total_income - $this->total_expenses;
     }
 
+    public function getExpectedIncomeAttribute()
+    {
+        return $this->contracts()->active()->get()->sum('expected_income');
+    }
+
+    public function getActualIncomeAttribute()
+    {
+        return $this->income()->sum('amount');
+    }
+
+    public function getVarianceAttribute()
+    {
+        return $this->expected_income - $this->actual_income;
+    }
+
+    public function getVariancePercentageAttribute()
+    {
+        if ($this->expected_income == 0) {
+            return 0;
+        }
+        return ($this->variance / $this->expected_income) * 100;
+    }
+
     public function getOccupancyRateAttribute()
     {
-        $totalUnits = $this->units()->count();
-        if ($totalUnits === 0) return 0;
-        
+        if ($this->units_count == 0) {
+            return 0;
+        }
         $occupiedUnits = $this->units()->where('status', 'occupied')->count();
-        return round(($occupiedUnits / $totalUnits) * 100, 2);
+        return ($occupiedUnits / $this->units_count) * 100;
     }
 
-    public function getTotalUnitsAttribute()
+    public function getRoiAttribute()
     {
-        return $this->units()->count();
+        if ($this->purchase_price == 0) {
+            return 0;
+        }
+        return ($this->net_income / $this->purchase_price) * 100;
     }
 
-    public function getOccupiedUnitsAttribute()
+    public function getIsActiveAttribute()
     {
-        return $this->units()->where('status', 'occupied')->count();
-    }
-
-    public function getAvailableUnitsAttribute()
-    {
-        return $this->units()->where('status', 'available')->count();
-    }
-
-    public function getMaintenanceUnitsAttribute()
-    {
-        return $this->units()->where('status', 'maintenance')->count();
+        return $this->status === 'active';
     }
 
     // Scopes
     public function scopeActive($query)
     {
-        return $query->whereHas('units', function ($q) {
-            $q->where('status', '!=', 'inactive');
-        });
+        return $query->where('status', 'active');
     }
 
-    public function scopeWithUnits($query)
+    public function scopeByType($query, $type)
     {
-        return $query->with(['units', 'units.leases', 'units.leases.tenant']);
+        return $query->where('property_type', $type);
+    }
+
+    public function scopeByStatus($query, $status)
+    {
+        return $query->where('status', $status);
     }
 
     public function scopeWithFinancials($query)
     {
-        return $query->with(['income', 'expenses', 'monthlySummaries']);
+        return $query->with(['contracts', 'income', 'expenses', 'units']);
     }
 
-    public function scopeWithOwners($query)
+    // Methods
+    public function getFinancialReport($startDate = null, $endDate = null)
     {
-        return $query->with(['owners' => function ($q) {
-            $q->where('status', 'active');
-        }]);
+        $startDate = $startDate ? Carbon::parse($startDate) : now()->startOfYear();
+        $endDate = $endDate ? Carbon::parse($endDate) : now()->endOfYear();
+
+        $income = $this->income()->whereBetween('date', [$startDate, $endDate])->sum('amount');
+        $expenses = $this->expenses()->whereBetween('date', [$startDate, $endDate])->sum('amount');
+        $expectedIncome = $this->contracts()->active()->get()->sum(function($contract) use ($startDate, $endDate) {
+            return $contract->calculateExpectedIncomeForPeriod($startDate, $endDate);
+        });
+
+        return [
+            'property_id' => $this->id,
+            'property_name' => $this->name,
+            'period' => [
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d')
+            ],
+            'income' => [
+                'expected' => $expectedIncome,
+                'actual' => $income,
+                'variance' => $expectedIncome - $income,
+                'variance_percentage' => $expectedIncome > 0 ? (($expectedIncome - $income) / $expectedIncome) * 100 : 0
+            ],
+            'expenses' => $expenses,
+            'net_income' => $income - $expenses,
+            'roi' => $this->purchase_price > 0 ? (($income - $expenses) / $this->purchase_price) * 100 : 0,
+            'occupancy_rate' => $this->occupancy_rate
+        ];
+    }
+
+    public function getIncomeVarianceReport()
+    {
+        $expected = $this->expected_income;
+        $actual = $this->actual_income;
+        $variance = $this->variance;
+        $percentage = $this->variance_percentage;
+
+        return [
+            'property_id' => $this->id,
+            'property_name' => $this->name,
+            'property_type' => $this->property_type,
+            'expected_income' => $expected,
+            'actual_income' => $actual,
+            'variance' => $variance,
+            'variance_percentage' => $percentage,
+            'status' => $variance > 0 ? 'underperforming' : ($variance < 0 ? 'overperforming' : 'on_target'),
+            'occupancy_rate' => $this->occupancy_rate,
+            'roi' => $this->roi,
+            'is_active' => $this->is_active
+        ];
     }
 }

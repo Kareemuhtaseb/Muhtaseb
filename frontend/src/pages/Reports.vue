@@ -327,8 +327,8 @@ export default {
     async loadData() {
       try {
         this.loading = true
-        const response = await this.$http.get('/reports.php')
-        this.data = response.data
+        const response = await this.$http.get('/reports/monthly')
+        this.data = response.data || { payments: [], expenses: [] }
       } catch (error) {
         console.error('Error loading reports:', error)
         this.data = { payments: [], expenses: [] }

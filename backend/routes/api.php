@@ -9,11 +9,7 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\PropertyController;
-use App\Http\Controllers\UnitController;
-use App\Http\Controllers\TenantController;
 use App\Http\Controllers\OwnerController;
-use App\Http\Controllers\LeaseController;
 use App\Http\Controllers\IncomeController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentController;
@@ -23,7 +19,10 @@ use App\Http\Controllers\DistributionController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\CategoryController;
-use App\Http\Controllers\CommercialComplexController;
+use App\Http\Controllers\ContractController;
+use App\Http\Controllers\PropertyController;
+use App\Http\Controllers\UnitController;
+use App\Http\Controllers\TenantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,68 +39,39 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// Commercial Complex Routes (New Structure)
-Route::middleware(['auth:sanctum'])->group(function () {
-    // Commercial Complex Management
-    Route::apiResource('commercial-complexes', CommercialComplexController::class);
-    Route::post('commercial-complexes/{id}/import-excel', [CommercialComplexController::class, 'importExcel']);
-    Route::get('commercial-complexes/{id}/dashboard', [CommercialComplexController::class, 'dashboard']);
-    
-    // Shops
-    Route::apiResource('shops', \App\Http\Controllers\ShopController::class);
-    Route::get('shops/{id}/contracts', [\App\Http\Controllers\ShopController::class, 'contracts']);
-    
-    // Companies
-    Route::apiResource('companies', \App\Http\Controllers\CompanyController::class);
-    Route::get('companies/{id}/contracts', [\App\Http\Controllers\CompanyController::class, 'contracts']);
-    
-    // Contracts
-    Route::apiResource('contracts', \App\Http\Controllers\ContractController::class);
-    Route::post('contracts/{id}/renew', [\App\Http\Controllers\ContractController::class, 'renew']);
-    Route::post('contracts/{id}/terminate', [\App\Http\Controllers\ContractController::class, 'terminate']);
-    
-    // Monthly Incomes
-    Route::apiResource('monthly-incomes', \App\Http\Controllers\MonthlyIncomeController::class);
-    Route::get('monthly-incomes/by-month/{year}/{month}', [\App\Http\Controllers\MonthlyIncomeController::class, 'byMonth']);
-    
-    // Income Transactions
-    Route::apiResource('income-transactions', \App\Http\Controllers\IncomeTransactionController::class);
-    Route::get('income-transactions/by-date-range', [\App\Http\Controllers\IncomeTransactionController::class, 'byDateRange']);
-    
-    // Complex Expenses
-    Route::apiResource('complex-expenses', \App\Http\Controllers\ComplexExpenseController::class);
-    Route::get('complex-expenses/by-category', [\App\Http\Controllers\ComplexExpenseController::class, 'byCategory']);
-});
-
-// Legacy Routes (keeping for backward compatibility)
+// Property Financial Management Routes (auth enabled)
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     
     // Properties
     Route::apiResource('properties', PropertyController::class);
+    Route::get('properties/{property}/financial-report', [PropertyController::class, 'financialReport']);
     Route::get('properties/{property}/units', [PropertyController::class, 'units']);
     Route::get('properties/{property}/income', [PropertyController::class, 'income']);
     Route::get('properties/{property}/expenses', [PropertyController::class, 'expenses']);
+    Route::get('properties/{property}/contracts', [PropertyController::class, 'contracts']);
+    Route::get('properties/{property}/statistics', [PropertyController::class, 'statistics']);
+    Route::get('properties/financial-summary', [PropertyController::class, 'financialSummary']);
     
     // Units
     Route::apiResource('units', UnitController::class);
-    Route::get('units/{unit}/leases', [UnitController::class, 'leases']);
-    Route::get('units/{unit}/payments', [UnitController::class, 'payments']);
+    Route::get('units/{unit}/financial-report', [UnitController::class, 'financialReport']);
+    Route::get('units/{unit}/contracts', [UnitController::class, 'contracts']);
+    Route::get('units/{unit}/income', [UnitController::class, 'income']);
+    Route::get('units/{unit}/expenses', [UnitController::class, 'expenses']);
+    Route::get('units/{unit}/statistics', [UnitController::class, 'statistics']);
     
-    // Tenants
-    Route::apiResource('tenants', TenantController::class);
-    Route::get('tenants/{tenant}/leases', [TenantController::class, 'leases']);
-    Route::get('tenants/{tenant}/payments', [TenantController::class, 'payments']);
+    // Contracts
+    Route::apiResource('contracts', ContractController::class);
+    Route::get('contracts/variance-analysis', [ContractController::class, 'varianceAnalysis']);
+    Route::get('contracts/expiring-soon', [ContractController::class, 'expiringSoon']);
+    Route::get('contracts/statistics', [ContractController::class, 'statistics']);
+    Route::post('contracts/{contract}/renew', [ContractController::class, 'renew']);
+    Route::post('contracts/{contract}/cancel', [ContractController::class, 'cancel']);
     
     // Owners
     Route::apiResource('owners', OwnerController::class);
-    Route::get('owners/{owner}/properties', [OwnerController::class, 'properties']);
     Route::get('owners/{owner}/distributions', [OwnerController::class, 'distributions']);
-    
-    // Leases
-    Route::apiResource('leases', LeaseController::class);
-    Route::post('leases/{lease}/renew', [LeaseController::class, 'renew']);
-    Route::post('leases/{lease}/terminate', [LeaseController::class, 'terminate']);
     
     // Income
     Route::apiResource('income', IncomeController::class);
@@ -134,10 +104,14 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     // Notifications
     Route::apiResource('notifications', NotificationController::class);
-    Route::post('notifications/mark-read', [NotificationController::class, 'markRead']);
+    Route::post('notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'markAsRead']);
     
     // Categories
     Route::apiResource('categories', CategoryController::class);
+
+    // Tenants
+    Route::apiResource('tenants', TenantController::class);
 });
 
 // Auth routes

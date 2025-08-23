@@ -11,11 +11,11 @@ async function load(){
   try {
     loading.value = true
     const [paymentsResponse, tenantsResponse] = await Promise.all([
-      axios.get('/payments.php'),
-      axios.get('/tenants.php')
+      axios.get('/payments'),
+      axios.get('/tenants')
     ])
-    payments.value = paymentsResponse.data
-    tenants.value = tenantsResponse.data
+    payments.value = paymentsResponse.data?.data?.data || paymentsResponse.data?.data || paymentsResponse.data || []
+    tenants.value = tenantsResponse.data?.data?.data || tenantsResponse.data?.data || tenantsResponse.data || []
   } catch (error) {
     console.error('Error loading data:', error)
   } finally {
@@ -27,7 +27,7 @@ onMounted(load)
 
 async function submit(){
   try {
-    await axios.post('/payments.php', form.value)
+    await axios.post('/payments', form.value)
     form.value = {tenant_id:'',payment_date:'',amount:'',method:'cash',notes:''}
     await load()
   } catch (error) {
@@ -37,7 +37,7 @@ async function submit(){
 
 async function remove(id){
   try {
-    await axios.delete(`/payments.php?id=${id}`)
+    await axios.delete(`/payments/${id}`)
     await load()
   } catch (error) {
     console.error('Error removing payment:', error)

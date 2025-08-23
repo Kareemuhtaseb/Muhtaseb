@@ -2,13 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PropertyType extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'name',
         'description',
@@ -16,38 +14,11 @@ class PropertyType extends Model
     ];
 
     protected $casts = [
-        'is_active' => 'boolean',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
+        'is_active' => 'boolean'
     ];
 
-    // Relationships
-    public function properties()
+    public function properties(): HasMany
     {
         return $this->hasMany(Property::class);
-    }
-
-    // Scopes
-    public function scopeActive($query)
-    {
-        return $query->where('is_active', true);
-    }
-
-    public function scopeInactive($query)
-    {
-        return $query->where('is_active', false);
-    }
-
-    // Accessor methods
-    public function getPropertiesCountAttribute()
-    {
-        return $this->properties()->count();
-    }
-
-    public function getActivePropertiesCountAttribute()
-    {
-        return $this->properties()->whereHas('units', function ($q) {
-            $q->where('status', '!=', 'inactive');
-        })->count();
     }
 }

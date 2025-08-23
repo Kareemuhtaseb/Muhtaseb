@@ -1,34 +1,29 @@
+version: "3.9"
+
 services:
   backend:
-    build: ./backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: muhtaseb-backend
+    working_dir: /var/www/html
     volumes:
       - ./backend:/var/www/html
+    environment:
+      - APP_ENV=local
+      - APP_DEBUG=true
+      - APP_KEY=base64:testkey123456789012345678901234567890
+      - DB_CONNECTION=sqlite
     ports:
       - "8000:8000"
-    environment:
-      - DB_CONNECTION=mysql
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_DATABASE=muhtaseb_test
-      - DB_USERNAME=root
-      - DB_PASSWORD=root
-      - APP_KEY=base64:testkey123456789012345678901234567890
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - CACHE_STORE=redis
-      - QUEUE_CONNECTION=redis
-      - SESSION_DRIVER=redis
-    depends_on:
-      - db
-      - redis
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
+    command: sh -c "php artisan optimize:clear && php artisan migrate --force || true && php -S 0.0.0.0:8000 -t public"
+
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: muhtaseb-frontend
+    working_dir: /app
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -36,53 +31,8 @@ services:
       - "5173:5173"
     depends_on:
       - backend
-    deploy:
-      resources:
-        limits:
-          memory: 256M
-        reservations:
-          memory: 128M
-  db:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: muhtaseb_test
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_INNODB_BUFFER_POOL_SIZE: 256M
-      MYSQL_INNODB_LOG_FILE_SIZE: 64M
-      MYSQL_INNODB_FLUSH_LOG_AT_TRX_COMMIT: 2
-      MYSQL_INNODB_FLUSH_METHOD: O_DIRECT
-    volumes:
-      - db_data:/var/lib/mysql
-      - ./backend/muhtaseb_test_data.sql:/docker-entrypoint-initdb.d/muhtaseb_test_data.sql
-    ports:
-      - "3306:3306"
-    deploy:
-      resources:
-        limits:
-          memory: 1G
-        reservations:
-          memory: 512M
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis_data:/data
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-        reservations:
-          memory: 256M
-  adminer:
-    image: adminer
-    ports:
-      - "8080:8080"
-    environment:
-      - ADMINER_DEFAULT_SERVER=db
-    depends_on:
-      - db
-volumes:
-  db_data:
-  redis_data:
+    command: sh -c "npm install --no-fund --no-audit && npm run dev -- --host 0.0.0.0 --port 5173"
+
+networks:
+  default:
+    name: muhtaseb-net

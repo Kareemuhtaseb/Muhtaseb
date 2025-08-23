@@ -352,8 +352,9 @@ export default {
     async loadExpenses() {
       try {
         this.loading = true
-        const response = await this.$http.get('/expenses.php')
-        this.expenses = response.data
+        const response = await this.$http.get('/expenses')
+        const data = response.data?.data?.data || response.data?.data || response.data
+        this.expenses = Array.isArray(data) ? data : []
       } catch (error) {
         console.error('Error loading expenses:', error)
         this.expenses = []
@@ -363,8 +364,8 @@ export default {
     },
     async loadProperties() {
       try {
-        const response = await this.$http.get('/properties.php')
-        this.properties = response.data
+        const response = await this.$http.get('/properties')
+        this.properties = response.data?.data?.data || response.data?.data || response.data || []
       } catch (error) {
         console.error('Error loading properties:', error)
         this.properties = []
@@ -372,8 +373,9 @@ export default {
     },
     async loadCategories() {
       try {
-        const response = await this.$http.get('/categories.php?type=expense')
-        this.expenseCategories = response.data
+        const response = await this.$http.get('/categories')
+        const cats = response.data?.data?.data || response.data?.data || response.data || []
+        this.expenseCategories = (Array.isArray(cats) ? cats : []).filter(c => c.type === 'expense')
       } catch (error) {
         console.error('Error loading categories:', error)
         this.expenseCategories = []
@@ -390,7 +392,7 @@ export default {
       }
 
       try {
-        await this.$http.delete(`/expenses.php?id=${id}`)
+        await this.$http.delete(`/expenses/${id}`)
         await this.loadExpenses()
       } catch (error) {
         console.error('Error removing expense:', error)
@@ -401,9 +403,9 @@ export default {
       this.saving = true
       try {
         if (this.showEditModal) {
-          await this.$http.put(`/expenses.php?id=${this.selectedExpense.id}`, this.form)
+          await this.$http.put(`/expenses/${this.selectedExpense.id}`, this.form)
         } else {
-          await this.$http.post('/expenses.php', this.form)
+          await this.$http.post('/expenses', this.form)
         }
         await this.loadExpenses()
         this.closeModal()

@@ -9,11 +9,8 @@ class Payment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'tenant_id',
-        'lease_id',
-        'property_id',
-        'unit_id',
         'income_id',
+        'contract_id',
         'payment_date',
         'amount',
         'method',
@@ -31,29 +28,14 @@ class Payment extends Model
     ];
 
     // Relationships
-    public function tenant()
-    {
-        return $this->belongsTo(Tenant::class);
-    }
-
-    public function lease()
-    {
-        return $this->belongsTo(Lease::class);
-    }
-
-    public function property()
-    {
-        return $this->belongsTo(Property::class);
-    }
-
-    public function unit()
-    {
-        return $this->belongsTo(Unit::class);
-    }
-
     public function income()
     {
         return $this->belongsTo(Income::class);
+    }
+
+    public function contract()
+    {
+        return $this->belongsTo(Contract::class);
     }
 
     public function recordedBy()
@@ -98,7 +80,10 @@ class Payment extends Model
             'check' => '📄',
             'bank_transfer' => '🏦',
             'credit_card' => '💳',
-            'online' => '🌐',
+            'debit_card' => '💳',
+            'paypal' => '🔵',
+            'stripe' => '💳',
+            'other' => '📋',
             default => '💰'
         };
     }
@@ -114,9 +99,9 @@ class Payment extends Model
         return $query->where('status', 'pending');
     }
 
-    public function scopeByDateRange($query, $startDate, $endDate)
+    public function scopeFailed($query)
     {
-        return $query->whereBetween('payment_date', [$startDate, $endDate]);
+        return $query->where('status', 'failed');
     }
 
     public function scopeByMethod($query, $method)
@@ -124,15 +109,30 @@ class Payment extends Model
         return $query->where('method', $method);
     }
 
-    public function scopeWithRelations($query)
+    public function scopeByDateRange($query, $startDate, $endDate)
     {
-        return $query->with(['tenant', 'lease', 'property', 'unit', 'recordedBy']);
+        return $query->whereBetween('payment_date', [$startDate, $endDate]);
     }
 
-    public function scopeWithInvoices($query)
+    public function scopeByAmountRange($query, $minAmount, $maxAmount)
     {
-        return $query->with(['invoices' => function ($q) {
-            $q->orderBy('application_date', 'desc');
-        }]);
+        return $query->whereBetween('amount', [$minAmount, $maxAmount]);
+    }
+
+    public function scopeWithDetails($query)
+    {
+        return $query->with(['income', 'contract', 'recordedBy']);
+    }
+
+    // Boot method
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($payment) {
+            if (!$payment->recorded_by) {
+                $payment->recorded_by = auth()->id();
+            }
+        });
     }
 }

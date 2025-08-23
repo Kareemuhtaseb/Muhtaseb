@@ -40,24 +40,24 @@
     <div v-else class="space-y-8">
       <!-- Premium Quick Actions with Enhanced Glass Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Add Property Card with Premium Glass Effects -->
+        <!-- Add Income Card with Premium Glass Effects -->
         <div 
           class="glass-premium rounded-2xl p-6 hover-lift transition-all duration-500 group cursor-pointer animate-float" 
-          @click="navigateToProperties"
+          @click="navigateToIncome"
           style="animation-delay: 0.1s"
         >
           <div class="flex items-center justify-between mb-4">
-            <div class="p-3 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-xl group-hover:scale-110 transition-transform duration-500 hover-rotate shadow-glow">
-              <svg class="w-6 h-6 text-blue-400 group-hover:text-blue-300 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-3 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-xl group-hover:scale-110 transition-transform duration-500 hover-rotate shadow-glow">
+              <svg class="w-6 h-6 text-green-400 group-hover:text-green-300 transition-colors duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
               </svg>
             </div>
-            <div class="text-xs bg-gradient-to-r from-blue-500/20 to-purple-500/20 hover:from-blue-500/30 hover:to-purple-500/30 text-blue-400 px-3 py-1 rounded-lg transition-all duration-300 group-hover:scale-105">
+            <div class="text-xs bg-gradient-to-r from-green-500/20 to-emerald-500/20 hover:from-green-500/30 hover:to-emerald-500/30 text-green-400 px-3 py-1 rounded-lg transition-all duration-300 group-hover:scale-105">
               Quick Add
             </div>
           </div>
-          <h3 class="text-white font-semibold mb-2 group-hover:text-blue-400 transition-colors duration-300 text-gradient">Add Property</h3>
-          <p class="text-white/60 text-sm group-hover:text-white/80 transition-colors duration-300">Register a new commercial property</p>
+          <h3 class="text-white font-semibold mb-2 group-hover:text-green-400 transition-colors duration-300 text-gradient">Add Income</h3>
+          <p class="text-white/60 text-sm group-hover:text-white/80 transition-colors duration-300">Record new income transaction</p>
         </div>
 
         <!-- Total Income Card with Premium Glass Effects -->
@@ -178,33 +178,96 @@
         </div>
       </div>
 
+      <!-- Property Statistics with Premium Glass -->
+      <div class="glass-premium rounded-2xl p-6 hover-lift slide-in-up mb-8" style="animation-delay: 0.7s">
+        <h3 class="text-xl font-bold text-white mb-6 text-gradient">Property Portfolio</h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="flex items-center justify-between p-3 bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 rounded-lg border border-emerald-500/20 hover:border-emerald-500/30 transition-all duration-300 hover-scale">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                </svg>
+              </div>
+              <span class="text-white/60">Properties</span>
+            </div>
+            <span class="text-emerald-400 font-semibold">{{ dashboard.overview?.properties || 0 }}</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-gradient-to-r from-blue-500/10 to-blue-500/5 rounded-lg border border-blue-500/20 hover:border-blue-500/30 transition-all duration-300 hover-scale">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
+                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5v4m8-4v4M8 11v4m8-4v4"></path>
+                </svg>
+              </div>
+              <span class="text-white/60">Units</span>
+            </div>
+            <span class="text-blue-400 font-semibold">{{ dashboard.overview?.units || 0 }}</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-gradient-to-r from-purple-500/10 to-purple-500/5 rounded-lg border border-purple-500/20 hover:border-purple-500/30 transition-all duration-300 hover-scale">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
+                <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                </svg>
+              </div>
+              <span class="text-white/60">Occupancy</span>
+            </div>
+            <span class="text-purple-400 font-semibold">{{ dashboard.overview?.occupancy_rate || 0 }}%</span>
+          </div>
+          <div class="flex items-center justify-between p-3 bg-gradient-to-r from-orange-500/10 to-orange-500/5 rounded-lg border border-orange-500/20 hover:border-orange-500/30 transition-all duration-300 hover-scale">
+            <div class="flex items-center">
+              <div class="w-8 h-8 bg-orange-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
+                <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+              </div>
+              <span class="text-white/60">Contracts</span>
+            </div>
+            <span class="text-orange-400 font-semibold">{{ dashboard.overview?.active_contracts || 0 }}</span>
+          </div>
+        </div>
+      </div>
+
       <!-- Premium Property Stats & Recent Activity with Enhanced Glass -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Property Statistics with Premium Glass -->
+        <!-- Financial Statistics with Premium Glass -->
         <div class="glass-premium rounded-2xl p-6 hover-lift slide-in-up" style="animation-delay: 0.7s">
-          <h3 class="text-xl font-bold text-white mb-6 text-gradient">Property Statistics</h3>
+          <h3 class="text-xl font-bold text-white mb-6 text-gradient">Financial Statistics</h3>
           <div class="space-y-4">
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-white/5 to-white/10 rounded-lg hover:bg-white/15 transition-all duration-300 hover-scale">
-              <div class="flex items-center">
-                <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
-                  <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                  </svg>
-                </div>
-                <span class="text-white/60">Total Properties</span>
-              </div>
-              <span class="text-white font-semibold text-gradient-primary">{{ dashboard.overview?.properties || 0 }}</span>
-            </div>
             <div class="flex items-center justify-between p-3 bg-gradient-to-r from-white/5 to-white/10 rounded-lg hover:bg-white/15 transition-all duration-300 hover-scale">
               <div class="flex items-center">
                 <div class="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
                   <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
                   </svg>
                 </div>
-                <span class="text-white/60">Total Units</span>
+                <span class="text-white/60">Total Income</span>
               </div>
-              <span class="text-white font-semibold text-gradient-success">{{ dashboard.overview?.units || 0 }}</span>
+              <span class="text-white font-semibold text-gradient-success">${{ formatNumber(dashboard.overview?.total_income || 0) }}</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-white/5 to-white/10 rounded-lg hover:bg-white/15 transition-all duration-300 hover-scale">
+              <div class="flex items-center">
+                <div class="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
+                  <svg class="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                  </svg>
+                </div>
+                <span class="text-white/60">Total Expenses</span>
+              </div>
+              <span class="text-white font-semibold text-gradient-primary">${{ formatNumber(dashboard.overview?.total_expenses || 0) }}</span>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-white/5 to-white/10 rounded-lg hover:bg-white/15 transition-all duration-300 hover-scale">
+              <div class="flex items-center">
+                <div class="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
+                  <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                  </svg>
+                </div>
+                <span class="text-white/60">Net Income</span>
+              </div>
+              <span class="text-blue-400 font-semibold">${{ formatNumber(dashboard.overview?.net_income || 0) }}</span>
             </div>
             <div class="flex items-center justify-between p-3 bg-gradient-to-r from-white/5 to-white/10 rounded-lg hover:bg-white/15 transition-all duration-300 hover-scale">
               <div class="flex items-center">
@@ -213,20 +276,9 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                   </svg>
                 </div>
-                <span class="text-white/60">Occupied Units</span>
+                <span class="text-white/60">Active Owners</span>
               </div>
-              <span class="text-green-400 font-semibold">{{ dashboard.overview?.occupied_units || 0 }}</span>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-gradient-to-r from-white/5 to-white/10 rounded-lg hover:bg-white/15 transition-all duration-300 hover-scale">
-              <div class="flex items-center">
-                <div class="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center mr-3 hover-rotate shadow-glow">
-                  <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                  </svg>
-                </div>
-                <span class="text-white/60">Available Units</span>
-              </div>
-              <span class="text-yellow-400 font-semibold">{{ (dashboard.overview?.units || 0) - (dashboard.overview?.occupied_units || 0) }}</span>
+              <span class="text-purple-400 font-semibold">{{ dashboard.owner_distributions?.length || 0 }}</span>
             </div>
           </div>
         </div>
@@ -374,9 +426,22 @@ export default {
     async loadDashboardData() {
       try {
         console.log('Loading dashboard data from backend...')
-        const response = await this.$http.get('/dashboard.php')
-        console.log('Dashboard data received:', response.data)
-        this.dashboard = response.data
+        // Use Laravel API only
+        const response = await this.$http.get('/dashboard')
+        const payload = response?.data
+        // Laravel returns { success, data: {...} }
+        this.dashboard = payload?.data || payload || {}
+
+        // Fallbacks when Laravel payload lacks fields expected by UI
+        if (!this.dashboard.current_month && this.dashboard.overview) {
+          const mi = this.dashboard.overview.monthly_income || 0
+          const me = this.dashboard.overview.monthly_expenses || 0
+          this.dashboard.current_month = {
+            income: mi,
+            expenses: me,
+            net: mi - me
+          }
+        }
       } catch (error) {
         console.error('Error loading dashboard data:', error)
         // Set default data for demo
@@ -384,11 +449,7 @@ export default {
           overview: {
             total_income: 125000,
             total_expenses: 45000,
-            net_income: 80000,
-            properties: 3,
-            units: 12,
-            occupied_units: 10,
-            occupancy_rate: 83.33
+            net_income: 80000
           },
           current_month: {
             income: 15000,
@@ -667,8 +728,8 @@ export default {
       const sign = change >= 0 ? '+' : ''
       return `${sign}$${this.formatNumber(Math.abs(change))}`
     },
-    navigateToProperties() {
-      this.$router.push('/properties')
+    navigateToIncome() {
+      this.$router.push('/income')
     }
   },
   beforeUnmount() {
